@@ -1,0 +1,44 @@
+service: polly-translation
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: eu-west-1
+  environment:
+    DEEPL_AUTH_KEY: ${ssm(eu-west-1):DEEPL_AUTH_KEY}
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "polly:SynthesizeSpeech"
+      Resource: "*"
+  apiGateway:
+    apiKeys:
+      - free:
+          - polly-api-key
+    usagePlan:
+      - free:
+          quota:
+            limit: 5000
+            offset: 1
+            period: MONTH
+          throttle:
+            burstLimit: 10
+            rateLimit: 15
+
+functions:
+  speech:
+    handler: handler.speech
+    events:
+      - http:
+          path: /speech
+          method: post
+          private: true
+          cors: true
+  translate:
+    handler: handler.translate
+    events:
+      - http:
+          path: /translate
+          method: post
+          private: true
+          cors: true
