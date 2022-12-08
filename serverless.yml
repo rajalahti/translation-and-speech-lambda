@@ -6,39 +6,77 @@ provider:
   region: eu-west-1
   environment:
     DEEPL_AUTH_KEY: ${ssm(eu-west-1):DEEPL_AUTH_KEY}
-  iamRoleStatements:
-    - Effect: "Allow"
-      Action:
-        - "polly:SynthesizeSpeech"
-      Resource: "*"
+    OPENAI_API_KEY: ${ssm(eu-west-1):OPENAI_API_KEY}
+    TRANSLATIONS_TABLE: "gtp-story-translations"
   apiGateway:
     apiKeys:
       - free:
-          - polly-api-key
+          - translation-api-key
     usagePlan:
       - free:
           quota:
-            limit: 5000
+            limit: 2000
             offset: 1
             period: MONTH
           throttle:
             burstLimit: 10
             rateLimit: 15
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:Query
+            - dynamodb:Scan
+          Resource:
+            - "Fn::GetAtt": [translationData, Arn]
+        - Effect: "Allow"
+          Action:
+            - "polly:SynthesizeSpeech"
+          Resource: "*"
 
 functions:
   speech:
-    handler: handler.speech
+    handler: handler.selectFunction
     events:
       - http:
           path: /speech
           method: post
           private: true
           cors: true
-  translate:
-    handler: handler.translate
-    events:
       - http:
           path: /translate
           method: post
           private: true
           cors: true
+      - http:
+          path: /random-story
+          method: get
+          private: true
+          cors: true
+      - http:
+          path: /random-stories
+          method: get
+          cors: true
+          private: true
+      - http:
+          path: /generate-story
+          method: post
+          private: true
+          cors: true
+resources:
+  Resources:
+    translationData:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: gtp-story-translations
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        # Set the capacity to auto-scale
+        BillingMode: PAY_PER_REQUEST
