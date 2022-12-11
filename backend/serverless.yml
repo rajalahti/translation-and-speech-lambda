@@ -14,7 +14,7 @@ provider:
       - free:
           - translation-api-key
     usagePlan:
-      free:
+      - free:
           quota:
             limit: 2000
             offset: 1
@@ -41,7 +41,7 @@ provider:
           Action:
             - s3:PutObject
           Resource:
-            - arn:aws:s3:::AUDIO_BUCKET/*
+            - "Fn::GetAtt": [audioFiles, Arn]
 functions:
   speech:
     handler: handler.selectFunction
@@ -88,8 +88,7 @@ resources:
     audioFiles:
       Type: AWS::S3::Bucket
       Properties:
-        BucketName:
-          Ref: AUDIO_BUCKET
+        BucketName: "gtp-stories-audio-finnish"
         PublicAccessBlockConfiguration:
           BlockPublicAcls: true
           IgnorePublicAcls: true
