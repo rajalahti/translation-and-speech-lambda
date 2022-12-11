@@ -36,12 +36,9 @@ provider:
         - Effect: "Allow"
           Action:
             - "polly:SynthesizeSpeech"
+            - "s3:ListBucket"
+            - "s3:PutObject"
           Resource: "*"
-        - Effect: Allow
-          Action:
-            - s3:PutObject
-          Resource:
-            - "Fn::GetAtt": [audioFiles, Arn]
 functions:
   speech:
     handler: handler.selectFunction
@@ -90,8 +87,8 @@ resources:
       Properties:
         BucketName: "gtp-stories-audio-finnish"
         PublicAccessBlockConfiguration:
-          BlockPublicAcls: true
-          IgnorePublicAcls: true
-          BlockPublicPolicy: true
-          RestrictPublicBuckets: true
+          BlockPublicAcls: false
+          IgnorePublicAcls: false
+          BlockPublicPolicy: false
+          RestrictPublicBuckets: false
         AccessControl: PublicRead

@@ -143,7 +143,7 @@ const speech = async (event) => {
 
   let result;
   try {
-    // Translate the text using AWS Polly
+    // Synthetize the text to speech using AWS Polly
     result = await polly.synthesizeSpeech(params).promise();
   } catch (error) {
     return {
@@ -161,9 +161,9 @@ const speech = async (event) => {
     Bucket: process.env.AUDIO_BUCKET,
     Key: `${id}.mp3`,
     Body: result.AudioStream,
-    ContentType: "audio/mpeg",
+    ContentType: "audio/mpeg"
   };
-  
+
   try {
     await s3.putObject(s3Params).promise();
   } catch (error) {
@@ -171,7 +171,7 @@ const speech = async (event) => {
       statusCode: 500,
       headers: headers,
       body: JSON.stringify({
-        error: "Error saving audio to S3",
+        error: error,
       }),
     };
   }
@@ -298,7 +298,7 @@ const generateStory = async (event) => {
     // Split the story into an array of paragraphs by usin the \n\n characters
     story = story.split("\n\n");
     story = story.filter((item) => item !== "");
-    
+
     // Combine the story again for translation, replace put a | between paragraphs
     story = story.join(" | ");
 
