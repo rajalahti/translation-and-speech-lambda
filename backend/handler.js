@@ -38,6 +38,7 @@ const translate = async (event, context) => {
   const body = JSON.parse(event.body);
   const text = body.text;
   const save = body.save;
+  const prompt = body.prompt;
   const language = body.language;
 
   try {
@@ -62,7 +63,14 @@ const translate = async (event, context) => {
     // Get the translated text from the response
     let translatedText = response.data.translations[0].text;
 
-    // If the story contains | characters, split the story into an array of paragraphs
+    // If the english story in text contains | characters, split the story into an array of paragraphs
+    let storyEn = text;
+    if (text.includes("|")) {
+      storyEn = text.split("|");
+    }
+      
+
+    // If the translated story contains | characters, split the story into an array of paragraphs
     if (translatedText.includes("|")) {
       translatedText = translatedText.split("|");
     }
@@ -76,8 +84,9 @@ const translate = async (event, context) => {
         TableName: process.env.TRANSLATIONS_TABLE,
         Item: {
           id: id,
-          english: text,
-          finnish: translatedText,
+          promptFi: prompt,
+          storyEn: storyEn,
+          storyFi: translatedText,
         },
       };
 
@@ -360,7 +369,7 @@ const generateStory = async (event) => {
     return {
       statusCode: 200,
       headers: headers,
-      body: JSON.stringify({ story: story }),
+      body: JSON.stringify({ story: story, prompt: prompt }),
     };
   } catch (error) {
     if (error.response) {
