@@ -31,6 +31,7 @@ provider:
             - dynamodb:GetItem
             - dynamodb:Query
             - dynamodb:Scan
+            - dynamodb:UpdateItem
           Resource:
             - "Fn::GetAtt": [translationData, Arn]
         - Effect: "Allow"

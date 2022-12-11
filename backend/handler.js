@@ -67,6 +67,7 @@ const translate = async (event, context) => {
       translatedText = translatedText.split("|");
     }
 
+    const id = context.awsRequestId;
     // If the save parameter is true, save the translation to DynamoDB
     if (save) {
       // Save the translation to DynamoDB
@@ -74,7 +75,7 @@ const translate = async (event, context) => {
       const params = {
         TableName: process.env.TRANSLATIONS_TABLE,
         Item: {
-          id: context.awsRequestId,
+          id: id,
           english: text,
           finnish: translatedText,
         },
@@ -83,11 +84,11 @@ const translate = async (event, context) => {
       await dynamoDb.put(params).promise();
     }
 
-    // Return the translated text
+    // Return the translated text and the id of the translation
     return {
       statusCode: 200,
       headers: headers,
-      body: JSON.stringify({ translation: translatedText }),
+      body: JSON.stringify({ translation: translatedText, id: id }),
     };
   } catch (error) {
     if (error.response) {
@@ -161,7 +162,7 @@ const speech = async (event) => {
     Bucket: process.env.AUDIO_BUCKET,
     Key: `${id}.mp3`,
     Body: result.AudioStream,
-    ContentType: "audio/mpeg"
+    ContentType: "audio/mpeg",
   };
 
   try {
@@ -171,9 +172,62 @@ const speech = async (event) => {
       statusCode: 500,
       headers: headers,
       body: JSON.stringify({
-        error: error,
+        error: "Error saving audio to S3",
       }),
     };
+  }
+
+  const url = `https://${process.env.AUDIO_BUCKET}.s3.amazonaws.com/${id}.mp3`;
+
+  // Check if the story has been saved to DynamoDB
+  const dynamoDb = new AWS.DynamoDB.DocumentClient();
+  const getParams = {
+    TableName: process.env.TRANSLATIONS_TABLE,
+    Key: {
+      id: id,
+    },
+  };
+
+  let savedStory;
+  try {
+    savedStory = await dynamoDb.get(getParams).promise();
+  } catch (error) {
+    return {
+      statusCode: 500,
+      headers: headers,
+      body: JSON.stringify({
+        error: "Error getting the story from DynamoDB",
+      }),
+    };
+  }
+
+  // If the story has been saved to DynamoDB, add the url of the audio file to the story
+  if (savedStory.Item) {
+    // Update the story in DynamoDB
+
+    const dynamoDb = new AWS.DynamoDB.DocumentClient();
+    const updateParams = {
+      TableName: process.env.TRANSLATIONS_TABLE,
+      Key: {
+        id: id,
+      },
+      UpdateExpression: "set audio = :audio",
+      ExpressionAttributeValues: {
+        ":audio": url,
+      },
+    };
+
+    try {
+      await dynamoDb.update(updateParams).promise();
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers: headers,
+        body: JSON.stringify({
+          error: "Error adding the audio url to the story in DynamoDB",
+        }),
+      };
+    }
   }
 
   // Return the url of the audio file
@@ -181,7 +235,7 @@ const speech = async (event) => {
     statusCode: 200,
     headers: headers,
     body: JSON.stringify({
-      url: `https://${process.env.AUDIO_BUCKET}.s3.amazonaws.com/${id}.mp3`,
+      url: url,
     }),
   };
 };
