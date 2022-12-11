@@ -21,7 +21,7 @@ export const translate = async (text, language, save) => {
   try {
     const response = await fetch(endpoint + "/translate", options);
     let data = await response.json();
-    return data.translation;
+    return data;
   } catch (error) {
     console.error(error);
   }
@@ -42,34 +42,26 @@ export const generateStory = async (prompt) => {
   try {
     const response = await fetch(endpoint + "/generate-story", options);
     let data = await response.json();
-    console.log(data)
-    return data.story;
+    return data;
   } catch (error) {
     console.error(error);
   }
 };
 
-// Get the audio stream from the API and return an audio element
-
-export const getAudio = async (text) => {
+// Call the /speech api to get a url to the mp3 file, provide the text and id of the story
+export const getAudioUrl = async (text, id) => {
   const options = {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": process.env.API_KEY,
+      "x-api-key": process.env.REACT_APP_API_KEY,
     },
-    data: { text: text },
+    body: JSON.stringify({ text: text, id: id }),
   };
-
   try {
     const response = await fetch(endpoint + "/speech", options);
-    // Turn the response into a blob
-    const blob = await response.blob();
-    // Create a URL for the blob
-    const url = URL.createObjectURL(blob);
-    // Create an audio element and set the source to the URL
-    const audio = new Audio(url);
-    return audio;
+    let data = await response.json();
+    return data.url;
   } catch (error) {
     console.error(error);
   }
