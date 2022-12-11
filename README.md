@@ -9,8 +9,8 @@
 
 You can add these parameters by running the following AWS CLI command:
 
-*aws ssm put-parameter --name DEEPL_AUTH_KEY --type String --value {DEEPL API-KEY-HERE}*
-*aws ssm put-parameter --name OPENAI_API_KEY --type String --value {OPENAI API-KEY-HERE}*
+- *aws ssm put-parameter --name DEEPL_AUTH_KEY --type String --value {DEEPL API-KEY-HERE}*
+- *aws ssm put-parameter --name OPENAI_API_KEY --type String --value {OPENAI API-KEY-HERE}*
 
 ## Endpoints
 
@@ -43,3 +43,10 @@ You can add these parameters by running the following AWS CLI command:
   - Accepts a POST request
   - Expects to recieve a body { "prompt": "Tell me a story about a boy who cried wolf." }
   - Returns a generated story
+
+
+## Frontend
+
+The frontend is a React app that uses the Lambda functions to translate text into Finnish and generate stories with OpenAI API.
+
+Frontend is still a work in progress...
