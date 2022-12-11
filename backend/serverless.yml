@@ -8,12 +8,13 @@ provider:
     DEEPL_AUTH_KEY: ${ssm(eu-west-1):DEEPL_AUTH_KEY}
     OPENAI_API_KEY: ${ssm(eu-west-1):OPENAI_API_KEY}
     TRANSLATIONS_TABLE: "gtp-story-translations"
+    AUDIO_BUCKET: "gtp-stories-audio-finnish"
   apiGateway:
     apiKeys:
       - free:
           - translation-api-key
     usagePlan:
-      - free:
+      free:
           quota:
             limit: 2000
             offset: 1
@@ -36,7 +37,11 @@ provider:
           Action:
             - "polly:SynthesizeSpeech"
           Resource: "*"
-
+        - Effect: Allow
+          Action:
+            - s3:PutObject
+          Resource:
+            - arn:aws:s3:::AUDIO_BUCKET/*
 functions:
   speech:
     handler: handler.selectFunction
@@ -57,7 +62,7 @@ functions:
           private: true
           cors: true
       - http:
-          path: /random-stories
+          path: /stories
           method: get
           cors: true
           private: true
@@ -80,3 +85,14 @@ resources:
             KeyType: HASH
         # Set the capacity to auto-scale
         BillingMode: PAY_PER_REQUEST
+    audioFiles:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName:
+          Ref: AUDIO_BUCKET
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: true
+          IgnorePublicAcls: true
+          BlockPublicPolicy: true
+          RestrictPublicBuckets: true
+        AccessControl: PublicRead
