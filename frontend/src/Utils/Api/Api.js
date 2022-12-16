@@ -9,14 +9,14 @@
 
 const endpoint = process.env.REACT_APP_API_ENDPOINT;
 
-export const translate = async (text, language, save) => {
+export const translate = async (text, language, save, storyType) => {
   const options = {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "x-api-key": process.env.REACT_APP_API_KEY,
     },
-    body: JSON.stringify({ text: text, language: language, save: save }),
+    body: JSON.stringify({ text: text, language: language, save: save, storyType: storyType }),
   };
   try {
     const response = await fetch(endpoint + "/translate", options);
@@ -29,14 +29,14 @@ export const translate = async (text, language, save) => {
 
 // Generate a story from the API
 
-export const generateStory = async (prompt) => {
+export const generateStory = async (prompt, storyType) => {
   const options = {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "x-api-key": process.env.REACT_APP_API_KEY,
     },
-    body: JSON.stringify({ prompt: prompt }),
+    body: JSON.stringify({ prompt: prompt, storyType: storyType }),
   };
 
   try {
@@ -44,7 +44,7 @@ export const generateStory = async (prompt) => {
     let data = await response.json();
     return data;
   } catch (error) {
-    console.error(error);
+    throw new Error(error);
   }
 };
 
@@ -63,7 +63,7 @@ export const getAudioUrl = async (text, id) => {
     let data = await response.json();
     return data.url;
   } catch (error) {
-    console.error(error);
+    throw new Error(error);
   }
 };
 
@@ -85,6 +85,6 @@ export const getStories = async (lastEvaluatedKey) => {
     );
     return response;
   } catch (error) {
-    console.error(error);
+    throw new Error(error);
   }
 };
