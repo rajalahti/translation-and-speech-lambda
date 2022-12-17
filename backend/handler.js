@@ -14,6 +14,9 @@ exports.selectFunction = async (event, context) => {
     return await randomStory(event, context);
   } else if (path === "/stories") {
     return await stories(event, context);
+  } else if (path.startsWith("/stories")) {
+    const storyId = path.split("/")[2];
+    return await story(event, storyId);
   } else if (path === "/generate-story") {
     return await generateStory(event, context);
   } else {
@@ -39,7 +42,9 @@ const translate = async (event, context) => {
   const text = body.text;
   const save = body.save;
   const prompt = body.prompt;
+  const storyType = body.storyType;
   const language = body.language;
+  const storyId = body.storyId;
 
   try {
     // Get the DEEPL_AUTH_KEY from the environment
@@ -68,36 +73,59 @@ const translate = async (event, context) => {
     if (text.includes("|")) {
       storyEn = text.split("|");
     }
-      
 
     // If the translated story contains | characters, split the story into an array of paragraphs
     if (translatedText.includes("|")) {
       translatedText = translatedText.split("|");
     }
 
-    const id = context.awsRequestId;
     // If the save parameter is true, save the translation to DynamoDB
     if (save) {
-      // Save the translation to DynamoDB
+      // Check if the story has been saved before
       const dynamoDb = new AWS.DynamoDB.DocumentClient();
       const params = {
         TableName: process.env.TRANSLATIONS_TABLE,
-        Item: {
-          id: id,
-          promptFi: prompt,
-          storyEn: storyEn,
-          storyFi: translatedText,
+        Key: {
+          id: storyId,
         },
       };
+      const result = await dynamoDb.get(params).promise();
 
-      await dynamoDb.put(params).promise();
+      // If the story has been saved before, udate the story by adding the storyFi (=translatedText) and promptFi (=prompt) properties to the existing story
+      if (result.Item) {
+        const params = {
+          TableName: process.env.TRANSLATIONS_TABLE,
+          Key: {
+            id: storyId,
+          },
+          UpdateExpression: "set storyFi = :storyFi, promptFi = :promptFi",
+          ExpressionAttributeValues: {
+            ":storyFi": translatedText,
+            ":promptFi": prompt,
+          },
+        };
+        await dynamoDb.update(params).promise();
+      } else {
+        // If the story has not been saved before, save the story to DynamoDB
+        const params = {
+          TableName: process.env.TRANSLATIONS_TABLE,
+          Item: {
+            id: storyId,
+            promptFi: prompt,
+            storyType: storyType,
+            storyEn: storyEn,
+            storyFi: translatedText,
+          },
+        };
+        await dynamoDb.put(params).promise();
+      }
     }
 
     // Return the translated text and the id of the translation
     return {
       statusCode: 200,
       headers: headers,
-      body: JSON.stringify({ translation: translatedText, id: id }),
+      body: JSON.stringify({ translation: translatedText }),
     };
   } catch (error) {
     if (error.response) {
@@ -324,11 +352,49 @@ const stories = async (event) => {
   };
 };
 
+// function that fetchet a story by id from DynamoDB
+const story = async (event, storyId) => {
+
+  const dynamoDb = new AWS.DynamoDB.DocumentClient();
+
+  // Get the story from DynamoDB with id
+  const params = {
+    TableName: process.env.TRANSLATIONS_TABLE,
+    Key: {
+      id: storyId,
+    },
+  };
+
+  let result;
+  try {
+    result = await dynamoDb.get(params).promise();
+    
+    // return the story
+    return {
+      statusCode: 200,
+      headers: headers,
+      body: JSON.stringify({
+        story: result.Item,
+      }),
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      headers: headers,
+      body: JSON.stringify({
+        error: "Error fetching story",
+      }),
+    };
+  }
+};
+
 // A function that uses axios to fetch a random story by calling OpenAI's API (model: davinci-3)
 const generateStory = async (event) => {
   const body = JSON.parse(event.body);
 
   const prompt = body.prompt;
+  const storyType = body.storyType;
+  const storyId = body.storyId;
 
   try {
     // Get the OPENAI_API_KEY from the environment
@@ -339,9 +405,7 @@ const generateStory = async (event) => {
       "https://api.openai.com/v1/completions",
       {
         model: "text-davinci-003",
-        prompt:
-          "You are a storyteller. Tell a childrens story about this subject: " +
-          prompt,
+        prompt: `You are a storyteller. Tell a ${storyType} story about this subject: ${prompt}`,
         temperature: 0.9,
         max_tokens: 500,
         top_p: 1,
@@ -361,6 +425,30 @@ const generateStory = async (event) => {
     // Split the story into an array of paragraphs by usin the \n\n characters
     story = story.split("\n\n");
     story = story.filter((item) => item !== "");
+
+    // Save the story to DynamoDB
+    const dynamoDb = new AWS.DynamoDB.DocumentClient();
+    const params = {
+      TableName: process.env.TRANSLATIONS_TABLE,
+      Item: {
+        id: storyId,
+        storyType: storyType,
+        promptEn: prompt,
+        storyEn: story,
+      },
+    };
+
+    try {
+      await dynamoDb.put(params).promise();
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers: headers,
+        body: JSON.stringify({
+          error: "Error saving the story to DynamoDB",
+        }),
+      };
+    }
 
     // Combine the story again for translation, replace put a | between paragraphs
     story = story.join(" | ");

@@ -65,6 +65,11 @@ functions:
           cors: true
           private: true
       - http:
+          path: /stories/{id}
+          method: get
+          cors: true
+          private: true
+      - http:
           path: /generate-story
           method: post
           private: true
