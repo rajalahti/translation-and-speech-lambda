@@ -21,7 +21,7 @@ export default function ToggleButtons({storyType, setStoryType}) {
       <ToggleButton value="adventure">Seikkailu</ToggleButton>
       <ToggleButton value="nonfiction">Tositarina</ToggleButton>
       <ToggleButton value="thriller">Jännitys</ToggleButton>
-      <ToggleButton value="scary">Kauhu</ToggleButton>
+      <ToggleButton value="horror">Kauhu</ToggleButton>
     </ToggleButtonGroup>
   );
 }

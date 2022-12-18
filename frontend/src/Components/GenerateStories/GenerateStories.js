@@ -6,13 +6,23 @@
 */
 import React, { useState } from "react";
 import { CircularProgress, Button, TextField, Box } from "@mui/material";
-import { generateStory, getAudioUrl, translate } from "../../Utils/Api/Api";
+import { generateStory, getAudioUrl, translate, getStoryById } from "../../Utils/Api/Api";
 import { Player } from "react-simple-player";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import { StoryDisplay } from "../StoryDisplay/StoryDisplay";
 import ToggleButtons from "../InputComponents/ButtonGroup";
-import Snackbar from '@mui/material/Snackbar';
-import MuiAlert from '@mui/material/Alert';
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert from "@mui/material/Alert";
+
+
+// UUID generator for stories
+const getUUID = () => {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    var r = (Math.random() * 16) | 0,
+      v = c == "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
 
 export const GenerateStories = () => {
   const [storyType, setStoryType] = useState("childrens");
@@ -23,6 +33,7 @@ export const GenerateStories = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [errorText, setErrorText] = useState("");
+  
 
   const resetStory = () => {
     setStory([]);
@@ -30,35 +41,86 @@ export const GenerateStories = () => {
     setAudio("");
   };
 
+  /*
+    Custom error handler for 504 errors from API gateway:
+    Starts a timer and after every 10 seconds makes a call to /stories/{storyId}
+    to see if the story has been generated. After three tries, the error is shown to the user.
+  */
+    const customErrorHandler = async (id) => {
+      let counter = 0;
+      let interval = setInterval(async () => {
+        counter++;
+        let storyData = "";
+        while (storyData === "" || counter > 3) {
+          storyData = await getStoryById(id);
+          if (storyData !== "") {
+            console.log(storyData)
+            clearInterval(interval);
+            let translatedStory = await translate(
+              storyData.story,
+              "FI",
+              true,
+              storyType,
+              prompt,
+              id
+            );
+            console.log(translatedStory);
+            //Split the story into an array of paragraphs using | as a delimiter
+            setStory(translatedStory.translation);
+            setLoading(false);
+            return;
+          } else {
+            if (counter > 3) {
+              clearInterval(interval);
+              handleErrorOpen("Virhe: Palvelu ei vastaa");
+              setLoading(false);
+              return;
+            }
+          }
+          counter++;
+        }
+      }, 10000);
+    };
+
   // This function translates the prompt and generates the story
   const handleStoryGeneration = async () => {
     setLoading(true);
     resetStory();
     // If propt is empty, return
     if (prompt === "") return;
+    // Generate a UUID for the story
+    let id = getUUID();
+    setStoryId(id);
     // Translate the prompt
     try {
       let translatedPrompt = await translate(prompt, "EN", false);
       translatedPrompt = translatedPrompt.translation;
       // Generate the story, set the story
-      const storyData = await generateStory(translatedPrompt, storyType);
+      const storyData = await generateStory(translatedPrompt, storyType, id);
       console.log(storyData);
       let translatedStory = await translate(
         storyData.story,
         "FI",
         true,
-        storyType
+        storyType,
+        prompt,
+        id
       );
       console.log(translatedStory);
       //Split the story into an array of paragraphs using | as a delimiter
       setStory(translatedStory.translation);
-      setStoryId(translatedStory.id);
       setLoading(false);
     } catch (error) {
       console.log(error);
-      handleErrorOpen("Ongelma tarinan luonnissa");
-      setLoading(false);
+      // If the error status is 504, start custom error handling
+      if (error.response.status === 504) {
+        // If the error status is 504, start custom error handling
+        customErrorHandler(id);
+    } else {
+      console.log(error)
     }
+  }
+
   };
 
   // This function gets the audio url for the story
@@ -88,7 +150,6 @@ export const GenerateStories = () => {
     setErrorText("");
   };
 
-
   // If audio is not empty and story is not empty, display Player component
   // If audio is empty and story is not empty, display Button component
   // If story is empty, display nothing
@@ -115,7 +176,6 @@ export const GenerateStories = () => {
   const Alert = React.forwardRef((props, ref) => {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
   });
-  
 
   return (
     <Box sx={{ maxWidth: 1000, margin: "50px auto" }}>
@@ -151,7 +211,11 @@ export const GenerateStories = () => {
       </Box>
       {loading ? <CircularProgress /> : ""}
       <Snackbar open={error} autoHideDuration={6000} onClose={handleErrorClose}>
-        <Alert onClose={handleErrorClose} severity="error" sx={{ width: '100%' }}>
+        <Alert
+          onClose={handleErrorClose}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
           {errorText}
         </Alert>
       </Snackbar>

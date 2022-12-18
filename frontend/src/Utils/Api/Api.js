@@ -9,14 +9,14 @@
 
 const endpoint = process.env.REACT_APP_API_ENDPOINT;
 
-export const translate = async (text, language, save, storyType) => {
+export const translate = async (text, language, save, storyType, prompt, storyId) => {
   const options = {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "x-api-key": process.env.REACT_APP_API_KEY,
     },
-    body: JSON.stringify({ text: text, language: language, save: save, storyType: storyType }),
+    body: JSON.stringify({ text: text, language: language, save: save, storyType: storyType, prompt: prompt, storyId: storyId }),
   };
   try {
     const response = await fetch(endpoint + "/translate", options);
@@ -29,14 +29,14 @@ export const translate = async (text, language, save, storyType) => {
 
 // Generate a story from the API
 
-export const generateStory = async (prompt, storyType) => {
+export const generateStory = async (prompt, storyType, storyId) => {
   const options = {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       "x-api-key": process.env.REACT_APP_API_KEY,
     },
-    body: JSON.stringify({ prompt: prompt, storyType: storyType }),
+    body: JSON.stringify({ prompt: prompt, storyType: storyType, storyId: storyId }),
   };
 
   try {
@@ -74,7 +74,7 @@ export const getStories = async (lastEvaluatedKey) => {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": process.env.API_KEY,
+      "x-api-key": process.env.REACT_APP_API_KEY,
     },
   };
 
@@ -83,7 +83,27 @@ export const getStories = async (lastEvaluatedKey) => {
       endpoint + "/stories?lastEvaluatedKey=" + lastEvaluatedKey,
       options
     );
-    return response;
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+// Get a story by id
+export const getStoryById = async (id) => {
+  const options = {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": process.env.API_KEY,
+    },
+  };
+
+  try {
+    const response = await fetch(endpoint + "/stories/" + id, options);
+    const data = await response.json();
+    return data;
   } catch (error) {
     throw new Error(error);
   }
