@@ -1,40 +1,55 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { StoryCard } from "../StoryCard/StoryCard";
 import ButtonGroup from "../InputComponents/ButtonGroup";
 import { getStories } from "../../Utils/Api/Api";
 import { Box } from "@mui/system";
+import InfiniteScroll from 'react-infinite-scroller';
 
 export const StoryList = () => {
   const [stories, setStories] = useState([]);
-  const [lastEvaluatedKey, setLastEvaluatedKey] = useState(null);
-  const [currentEvaluatedKey, setCurrentEvaluatedKey] = useState(null);
+  const [nextKey, setNextKey] = useState(null);
 
   useEffect(() => {
     const fetchStories = async () => {
-      const data = await getStories(lastEvaluatedKey);
+      const data = await getStories(nextKey);
       console.log(data);
       setStories(data.translations);
       let key = JSON.parse(data.lastEvaluatedKey);
+      console.log(key)
       key = key.id;
       console.log(key)
-      setCurrentEvaluatedKey(key);
+      setNextKey(key)
     };
     fetchStories();
-  }, [lastEvaluatedKey]);
+  }, []);
 
   const handleLoadMore = () => {
-    setLastEvaluatedKey(currentEvaluatedKey);
+    const fetchStories = async () => {
+      const data = await getStories(nextKey);
+      setStories([...stories, ...data.translations]);
+      let key = data.lastEvaluatedKey ? JSON.parse(data.lastEvaluatedKey) : null;
+      key = key && key.id;
+      console.log(key)
+      setNextKey(key)
+    };
+    fetchStories();
+    
   };
 
   return (
     <div>
       <ButtonGroup />
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 7, justifyContent: 'space-evenly'}}>
+      <InfiniteScroll
+            pageStart={0}
+            loadMore={handleLoadMore}
+            hasMore={nextKey !== null}
+            loader={<div className="loader" key={0}>Loading ...</div>}
+            style={{display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'space-evenly'}}
+        >
         {stories.map((story) => (
           <StoryCard key={story.id} story={story} />
         ))}
-      </Box>
-      <button onClick={handleLoadMore}>Load more</button>
+        </InfiniteScroll>
     </div>
   );
 };

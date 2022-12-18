@@ -78,9 +78,11 @@ export const getStories = async (lastEvaluatedKey) => {
     },
   };
 
+  let queryParams = lastEvaluatedKey ? "?lastEvaluatedKey=" + lastEvaluatedKey : "";
+
   try {
     const response = await fetch(
-      endpoint + "/stories?lastEvaluatedKey=" + lastEvaluatedKey,
+      endpoint + "/stories" + queryParams,
       options
     );
     const data = await response.json();
