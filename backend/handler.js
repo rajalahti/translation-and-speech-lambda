@@ -322,8 +322,14 @@ const stories = async (event) => {
     Limit: 10,
   };
 
-  if (event.lastEvaluatedKey) {
-    params.ExclusiveStartKey = JSON.parse(event.lastEvaluatedKey);
+  // if the events query string parameters contain a lastEvaluatedKey, add it to the params
+  if (
+    event.queryStringParameters &&
+    event.queryStringParameters.lastEvaluatedKey
+  ) {
+    params.ExclusiveStartKey = {
+      id: event.queryStringParameters.lastEvaluatedKey,
+    };
   }
 
   let result;
@@ -334,6 +340,7 @@ const stories = async (event) => {
       statusCode: 500,
       headers: headers,
       body: JSON.stringify({
+        params: params,
         error: "Error fetching translations",
       }),
     };
@@ -354,7 +361,6 @@ const stories = async (event) => {
 
 // function that fetchet a story by id from DynamoDB
 const story = async (event, storyId) => {
-
   const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
   // Get the story from DynamoDB with id
@@ -368,7 +374,7 @@ const story = async (event, storyId) => {
   let result;
   try {
     result = await dynamoDb.get(params).promise();
-    
+
     // return the story
     return {
       statusCode: 200,

@@ -31,7 +31,7 @@ export const StoryCard = ({ story }) => {
       <CardMedia
         component="img"
         height="140"
-        image={`images/${storyType}-story-${randomImage()}.png`}
+        image={`images/${storyType}-story-${randomImage()}.jpg`}
         alt={`${storyType} image`}
       />
       <CardContent>
