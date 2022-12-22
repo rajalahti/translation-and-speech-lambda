@@ -39,19 +39,11 @@ export const Header = () => {
       >
         <Link
           component={RouterLink}
-          to="/rakenna-tarina"
+          to="/"
           underline="hover"
           sx={{ fontSize: 32, fontWeight: 700 }}
         >
-          Rakenna tarina
-        </Link>
-        <Link
-          component={RouterLink}
-          to="/vapaa-aihe"
-          underline="hover"
-          sx={{ fontSize: 32, fontWeight: 700 }}
-        >
-          Vapaa aihe
+          Luo tarina
         </Link>
         <Link
           component={RouterLink}

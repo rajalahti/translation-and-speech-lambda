@@ -37,19 +37,19 @@ export const StoryList = () => {
   };
 
   return (
-    <div>
+    <Box sx={{my: 5}}>
       <ButtonGroup />
       <InfiniteScroll
             pageStart={0}
             loadMore={handleLoadMore}
             hasMore={nextKey !== null}
             loader={<div className="loader" key={0}>Loading ...</div>}
-            style={{display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'space-evenly'}}
+            style={{display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'space-evenly', marginTop: '2rem'}}
         >
         {stories.map((story) => (
           <StoryCard key={story.id} story={story} />
         ))}
         </InfiniteScroll>
-    </div>
+    </Box>
   );
 };

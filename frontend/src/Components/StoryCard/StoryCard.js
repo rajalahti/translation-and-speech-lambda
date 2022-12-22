@@ -17,6 +17,12 @@ const limitStoryLength = (story) => {
   return limitedStory.join(" ") + "...";
 };
 
+// Random integer between 1 and 4
+const randomImage = () => {
+  return Math.floor(Math.random() * 4) + 1;
+};
+
+// Use images from public/images folder
 export const StoryCard = ({ story }) => {
   console.log(typeof story);
   let { promptFi, storyType, storyFi } = story;
@@ -25,8 +31,8 @@ export const StoryCard = ({ story }) => {
       <CardMedia
         component="img"
         height="140"
-        image="/static/images/cards/contemplative-reptile.jpg"
-        alt="green iguana"
+        image={`images/${storyType}-story-${randomImage()}.png`}
+        alt={`${storyType} image`}
       />
       <CardContent>
         <Typography gutterBottom variant="h5" component="div">
