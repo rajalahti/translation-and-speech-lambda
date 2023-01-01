@@ -35,7 +35,7 @@ export default function ToggleButtons({ storyType, setStoryType, variant, setLas
       <ToggleButton value="horror">Kauhu</ToggleButton>
     </ToggleButtonGroup>
   ) : (
-    <FormControl sx={{width: 130}} >
+    <FormControl sx={{width: 150}} >
       <InputLabel id="demo-simple-select-label">Tarinan genre</InputLabel>
       <Select
         labelId="demo-simple-select-label"

@@ -54,7 +54,7 @@ export const StoryList = () => {
           </div>
         }
       >
-        <Grid container spacing={3} align="center">
+        <Grid container spacing={3} align="center" sx={{overflow: 'auto'}}>
           {stories.map((story, index) => (
             <Grid item xs={12} sm={6} md={4} xl={3} key={index} >
               <StoryCard key={story.id} story={story} />

@@ -16,6 +16,7 @@ export const SingleStory = () => {
   const [storyId, setStoryId] = useState("");
   const [audio, setAudio] = useState("");
   const [loading, setLoading] = useState(false);
+  const [audioLoading, setAudioLoading] = useState(false);
   const [error, setError] = useState(false);
   const [errorText, setErrorText] = useState("");
 
@@ -43,6 +44,7 @@ export const SingleStory = () => {
 
   // This function gets the audio url for the story
   const handleAudioUrlFetch = async () => {
+    setAudioLoading(true);
     // If storyId or story is empty, return
     if (storyId === "" || story === "") return;
     // Filter out empty items from the story array
@@ -53,6 +55,7 @@ export const SingleStory = () => {
     // Get the audio url
     const audioUrl = await getAudioUrl(joinedStory, storyId);
     setAudio(audioUrl);
+    setAudioLoading(false);
   };
 
   const handleErrorOpen = (message) => {
@@ -72,6 +75,7 @@ export const SingleStory = () => {
   // If audio is empty and story is not empty, display Button component
   // If story is empty, display nothing
   const displayPlayer = () => {
+    if (audioLoading) return <CircularProgress />;
     if (audio !== "" && story !== "") {
       return (
         <Player src={audio} autoPlay={false} grey={[22, 22, 22]} height={40} />

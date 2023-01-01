@@ -6,9 +6,10 @@ export const StoryDisplay = ({ story }) => {
     <Box
       sx={{
         background: 'url("https://i.imgur.com/0kjMcUe.png")',
-        backgroundSize: "cover",
+        backgroundSize: "1000px",
         backgroundPosition: "center right",
         padding: '40px 20px 85px 20px',
+        paddingBottom: { xs: "150px", sm: "100px", md: "85px" },
         margin: '0 20px',
         filter: 'brightness(0.95) sepia(30%) saturate(80%)',
         borderRadius: '30px',
