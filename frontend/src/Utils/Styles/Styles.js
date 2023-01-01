@@ -23,6 +23,13 @@ export const Theme = createTheme({
       fontSize: 143,
       fontWeight: 400,
       color: "#CAB09C",
+      '@media (max-width:900px)': {
+        fontSize: 80,
+      },
+      '@media (max-width:600px)': {
+        fontSize: 60,
+      },
     },
   },
 });
+

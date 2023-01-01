@@ -16,13 +16,13 @@ export const Header = () => {
         justifyContent: "flex-end",
         width: "100%",
         backgroundSize: "cover",
-        backgroundPosition: "center",
-        height: "85vh",
+        backgroundPosition: {xs: 'center', sm: 'bottom', lg: 'center'},
+        height: {xs: '240px', sm: '500px'}
       }}
     >
       <Typography
         variant="h1"
-        sx={{ position: "absolute", right: "15%", top: "3%" }}
+        sx={{ position: "absolute", right: "15%", top: {xs: '0%', sm: '3%'} }}
       >
         Satukone
       </Typography>
@@ -31,8 +31,8 @@ export const Header = () => {
           width: "100%",
           backgroundColor: "rgba(30, 30, 30, 0.86)",
           textAlign: "center",
-          paddingTop: theme.spacing(5),
-          paddingBottom: theme.spacing(5),
+          paddingTop: {xs: theme.spacing(2), sm: theme.spacing(5)},
+          paddingBottom: {xs: theme.spacing(2), sm: theme.spacing(5)},
           display: "flex",
           justifyContent: "space-evenly",
         }}
@@ -41,7 +41,7 @@ export const Header = () => {
           component={RouterLink}
           to="/"
           underline="hover"
-          sx={{ fontSize: 32, fontWeight: 700 }}
+          sx={{ fontSize: {xs: 24, md: 32}, fontWeight: 700 }}
         >
           Luo tarina
         </Link>
@@ -49,7 +49,7 @@ export const Header = () => {
           component={RouterLink}
           to="/selaa-tarinoita"
           underline="hover"
-          sx={{ fontSize: 32, fontWeight: 700 }}
+          sx={{ fontSize: {xs: 24, md: 32}, fontWeight: 700 }}
         >
           Selaa tarinoita
         </Link>
