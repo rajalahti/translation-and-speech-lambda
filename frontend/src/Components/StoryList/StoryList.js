@@ -8,40 +8,45 @@ import Grid from "@mui/material/Grid";
 
 export const StoryList = () => {
   const [stories, setStories] = useState([]);
-  const [nextKey, setNextKey] = useState(null);
+  const [lastEvaluatedKey, setLastEvaluetedKey] = useState(null);
+  const [storyType, setStoryType] = useState("all");
 
   useEffect(() => {
     const fetchStories = async () => {
-      const data = await getStories(nextKey);
+      // if storyType is all then we don't need to pass it to the api
+      const storyTypeParam = storyType === "all" ? null : storyType;
+      const data = await getStories(lastEvaluatedKey, storyTypeParam);
       setStories(data.translations);
       let key = JSON.parse(data.lastEvaluatedKey);
       key = key.id;
-      setNextKey(key);
+      setLastEvaluetedKey(key);
     };
     fetchStories();
-  }, []);
+  }, [storyType]);
 
   const handleLoadMore = () => {
     const fetchStories = async () => {
-      const data = await getStories(nextKey);
+      // if storyType is all then we don't need to pass it to the api
+      const storyTypeParam = storyType === "all" ? null : storyType;
+      const data = await getStories(lastEvaluatedKey, storyTypeParam);
       setStories([...stories, ...data.translations]);
       let key = data.lastEvaluatedKey
         ? JSON.parse(data.lastEvaluatedKey)
         : null;
       key = key && key.id;
-      setNextKey(key);
+      setLastEvaluetedKey(key);
     };
     fetchStories();
   };
 
   return (
     <Box sx={{ my: 5, width: "100%" }}>
-      <ButtonGroup />
+      <ButtonGroup storyType={storyType} setStoryType={setStoryType} variant="filter" setLastEvaluetedKey={setLastEvaluetedKey}  />
 
       <InfiniteScroll
         pageStart={0}
         loadMore={handleLoadMore}
-        hasMore={nextKey !== null}
+        hasMore={lastEvaluatedKey !== null}
         style={{paddingTop: '50px'}}
         loader={
           <div className="loader" key={0}>

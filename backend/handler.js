@@ -312,15 +312,29 @@ const randomStory = async (event) => {
   };
 };
 
-// function that fetches 10 random translations from DynamoDB with pagination
+// function that fetches 10 random translations from DynamoDB with pagination and filters with storyType
 const stories = async (event) => {
   const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
-  // Get the translations from DynamoDB
+  // Get storyType from the query string parameters
+  let storyType;
+  if (event.queryStringParameters && event.queryStringParameters.storyType) {
+    storyType = event.queryStringParameters.storyType;
+  }
+
+ // Create params for the DynamoDB scan
   const params = {
     TableName: process.env.TRANSLATIONS_TABLE,
     Limit: 10,
   };
+
+  // If storyType is set, add it to the params
+  if (storyType) {
+    params.FilterExpression = "storyType = :storyType";
+    params.ExpressionAttributeValues = {
+      ":storyType": storyType,
+    };
+  }
 
   // if the events query string parameters contain a lastEvaluatedKey, add it to the params
   if (

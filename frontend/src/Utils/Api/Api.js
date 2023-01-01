@@ -75,7 +75,7 @@ const randomImage = (storytype) => {
   return `images/${storytype}-story-${randomInteger}.jpg`
 };
 
-export const getStories = async (lastEvaluatedKey) => {
+export const getStories = async (lastEvaluatedKey, storyType) => {
   const options = {
     method: "GET",
     headers: {
@@ -84,7 +84,18 @@ export const getStories = async (lastEvaluatedKey) => {
     },
   };
 
-  let queryParams = lastEvaluatedKey ? "?lastEvaluatedKey=" + lastEvaluatedKey : "";
+  // Add query parameters to the endpoint
+  let lastEvaluatedKeyParam = lastEvaluatedKey ? `lastEvaluatedKey=${lastEvaluatedKey}` : "";
+  let storyTypeParam = storyType ? `storyType=${storyType}` : "";
+
+  let queryParams = "";
+  if (lastEvaluatedKeyParam && storyTypeParam) {
+    queryParams = `?${lastEvaluatedKeyParam}&${storyTypeParam}`;
+  } else if (lastEvaluatedKeyParam) {
+    queryParams = `?${lastEvaluatedKeyParam}`;
+  } else if (storyTypeParam) {
+    queryParams = `?${storyTypeParam}`;
+  }
 
   try {
     const response = await fetch(

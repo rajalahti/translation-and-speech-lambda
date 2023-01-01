@@ -31,6 +31,7 @@ export const GenerateStories = () => {
   const [audio, setAudio] = useState("");
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
+  const [audioLoading, setAudioLoading] = useState(false);
   const [error, setError] = useState(false);
   const [errorText, setErrorText] = useState("");
   
@@ -124,6 +125,7 @@ export const GenerateStories = () => {
 
   // This function gets the audio url for the story
   const handleAudioUrlFetch = async () => {
+    setAudioLoading(true);
     // If storyId or story is empty, return
     if (storyId === "" || story === "") return;
     // Filter out empty items from the story array
@@ -134,6 +136,7 @@ export const GenerateStories = () => {
     // Get the audio url
     const audioUrl = await getAudioUrl(joinedStory, storyId);
     setAudio(audioUrl);
+    setAudioLoading(false);
   };
 
   const handleErrorOpen = (message) => {
@@ -153,6 +156,7 @@ export const GenerateStories = () => {
   // If audio is empty and story is not empty, display Button component
   // If story is empty, display nothing
   const displayPlayer = () => {
+    if (audioLoading) return <CircularProgress />;
     if (audio !== "" && story.length > 0) {
       return (
         <Player src={audio} autoPlay={true} grey={[22, 22, 22]} height={40} />
@@ -201,7 +205,7 @@ export const GenerateStories = () => {
           onChange={(e) => setPrompt(e.target.value)}
           sx={{ flexGrow: 2 }}
         />
-        <Button variant="contained" onClick={handleStoryGeneration}>
+        <Button variant="contained" onClick={handleStoryGeneration} disabled={loading || !prompt}>
           Luo tarina
         </Button>
       </Box>

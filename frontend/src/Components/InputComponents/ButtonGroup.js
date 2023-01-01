@@ -7,9 +7,13 @@ import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
 
-export default function ToggleButtons({ storyType, setStoryType }) {
+export default function ToggleButtons({ storyType, setStoryType, variant, setLastEvaluetedKey }) {
+  
   const handleChange = (event) => {
     setStoryType(event.target.value);
+    if (variant === 'filter') {
+      setLastEvaluetedKey(null);
+    }
   };
 
   const matches = useMediaQuery((theme) => theme.breakpoints.up("sm"));
@@ -22,6 +26,7 @@ export default function ToggleButtons({ storyType, setStoryType }) {
       onChange={handleChange}
       size="medium"
     >
+      {variant === 'filter' && <ToggleButton value="all">Kaikki</ToggleButton>}
       <ToggleButton value="childrens">Satu</ToggleButton>
       <ToggleButton value="fantasy">Fantasia</ToggleButton>
       <ToggleButton value="adventure">Seikkailu</ToggleButton>
@@ -39,6 +44,7 @@ export default function ToggleButtons({ storyType, setStoryType }) {
         label="Tarinan tyyppi"
         onChange={handleChange}
       >
+        {variant === 'filter' && <MenuItem value="all">Kaikki</MenuItem>}
         <MenuItem value="childrens">Satu</MenuItem>
         <MenuItem value="fantasy">Fantasia</MenuItem>
         <MenuItem value="adventure">Seikkailu</MenuItem>
