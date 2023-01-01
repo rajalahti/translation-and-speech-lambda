@@ -69,6 +69,12 @@ export const getAudioUrl = async (text, id) => {
 
 // Get all stories from the api, use lastEvaluatedKey for pagination
 
+// Random integer between 1 and 4 to get a random image for the story
+const randomImage = (storytype) => {
+  let randomInteger =  Math.floor(Math.random() * 4) + 1;
+  return `images/${storytype}-story-${randomInteger}.jpg`
+};
+
 export const getStories = async (lastEvaluatedKey) => {
   const options = {
     method: "GET",
@@ -86,6 +92,13 @@ export const getStories = async (lastEvaluatedKey) => {
       options
     );
     const data = await response.json();
+    // Add a random image to each story
+    const storiesWithImages = data.translations.map((story) => {
+      story.image = randomImage(story.storyType);
+      return story;
+    });
+    console.log(storiesWithImages)
+    data.translations = storiesWithImages;
     return data;
   } catch (error) {
     throw new Error(error);
@@ -98,14 +111,14 @@ export const getStoryById = async (id) => {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": process.env.API_KEY,
+      "x-api-key": process.env.REACT_APP_API_KEY,
     },
   };
 
   try {
     const response = await fetch(endpoint + "/stories/" + id, options);
-    const data = await response.json();
-    return data;
+    const data =  await response.json();
+    return data.story;
   } catch (error) {
     throw new Error(error);
   }

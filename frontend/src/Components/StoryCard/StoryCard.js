@@ -3,8 +3,10 @@ import Card from "@mui/material/Card";
 import CardActions from "@mui/material/CardActions";
 import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
-import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
+import {  Link } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
+
 
 // Function to limit the length of the story to max 200 characters. But dont cut the words in half.
 const limitStoryLength = (story) => {
@@ -17,24 +19,18 @@ const limitStoryLength = (story) => {
   return limitedStory.join(" ") + "...";
 };
 
-// Random integer between 1 and 4
-const randomImage = () => {
-  return Math.floor(Math.random() * 4) + 1;
-};
-
 // Use images from public/images folder
 export const StoryCard = ({ story }) => {
-  console.log(typeof story);
-  let { promptFi, storyType, storyFi } = story;
+  let { promptFi, storyType, storyFi, image, id } = story;
   return (
-    <Card sx={{ maxWidth: 345 }}>
+    <Card sx={{ maxWidth: 345, height: '100%', position: 'relative' }}>
       <CardMedia
         component="img"
         height="140"
-        image={`images/${storyType}-story-${randomImage()}.jpg`}
+        image={image}
         alt={`${storyType} image`}
       />
-      <CardContent>
+      <CardContent sx={{mb: '35px'}}>
         <Typography gutterBottom variant="h5" component="div">
           {promptFi}
         </Typography>
@@ -42,9 +38,15 @@ export const StoryCard = ({ story }) => {
           {Array.isArray(storyFi) && limitStoryLength(storyFi)}
         </Typography>
       </CardContent>
-      <CardActions>
-        <Button size="small">Share</Button>
-        <Button size="small">Learn More</Button>
+      <CardActions sx={{position: 'absolute', bottom: 0}}>
+      <Link
+          component={RouterLink}
+          to={`/selaa-tarinoita/${id}`}
+          underline="none"
+          sx={{ fontSize: 16, fontWeight: 700, mx: 1, mb: 1 }}
+        >
+          Lue tarina
+        </Link>
       </CardActions>
     </Card>
   );
