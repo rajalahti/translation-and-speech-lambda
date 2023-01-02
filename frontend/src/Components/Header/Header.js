@@ -22,7 +22,7 @@ export const Header = () => {
     >
       <Typography
         variant="h1"
-        sx={{ position: "absolute", right: "15%", top: {xs: '0%', sm: '3%'} }}
+        sx={{ position: "absolute", right: "15%", top: {xs: '0%', sm: '3%', md: '0%' } }}
       >
         Satukone
       </Typography>

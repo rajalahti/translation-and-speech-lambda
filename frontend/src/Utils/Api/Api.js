@@ -71,8 +71,8 @@ export const getAudioUrl = async (text, id) => {
 
 // Random integer between 1 and 4 to get a random image for the story
 const randomImage = (storytype) => {
-  let randomInteger =  Math.floor(Math.random() * 4) + 1;
-  return `images/${storytype}-story-${randomInteger}.jpg`
+  let randomInteger =  Math.floor(Math.random() * 8) + 1;
+  return `images/${storytype}-story-${randomInteger}.png`
 };
 
 export const getStories = async (lastEvaluatedKey, storyType) => {
