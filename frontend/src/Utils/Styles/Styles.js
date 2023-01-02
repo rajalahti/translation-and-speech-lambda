@@ -30,6 +30,16 @@ export const Theme = createTheme({
         fontSize: 60,
       },
     },
+    h2: {
+      fontSize: 36,
+      fontWeight: 700,
+      '@media (max-width:900px)': {
+        fontSize: 32,
+      },
+      '@media (max-width:600px)': {
+        fontSize: 24,
+      },
+    },
   },
 });
 

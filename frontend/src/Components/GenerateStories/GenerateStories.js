@@ -223,7 +223,7 @@ export const GenerateStories = () => {
         </Alert>
       </Snackbar>
 
-      {story.length > 0 ? <StoryDisplay story={story} /> : ""}
+      {story.length > 0 ? <StoryDisplay story={story} prompt={prompt} /> : ""}
     </Box>
   );
 };

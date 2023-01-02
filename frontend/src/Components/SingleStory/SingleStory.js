@@ -13,6 +13,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 export const SingleStory = () => {
   const [story, setStory] = useState([]);
+  const [prompt, setPrompt] = useState("");
   const [storyId, setStoryId] = useState("");
   const [audio, setAudio] = useState("");
   const [loading, setLoading] = useState(false);
@@ -29,6 +30,7 @@ export const SingleStory = () => {
       const storyData = await getStoryById(id);
       if (storyData !== "") {
         setStory(storyData.storyFi);
+        setPrompt(storyData.promptFi);
         setStoryId(storyData.id);
         if (storyData.audio) {
           setAudio(storyData.audio);
@@ -122,7 +124,7 @@ export const SingleStory = () => {
           {errorText}
         </Alert>
       </Snackbar>
-      {story ? <StoryDisplay story={story} /> : ""}
+      {story ? <StoryDisplay story={story} prompt={prompt}  /> : ""}
     </Box>
   );
 };

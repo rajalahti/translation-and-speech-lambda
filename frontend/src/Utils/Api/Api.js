@@ -67,14 +67,17 @@ export const getAudioUrl = async (text, id) => {
   }
 };
 
-// Get all stories from the api, use lastEvaluatedKey for pagination
-
-// Random integer between 1 and 4 to get a random image for the story
-const randomImage = (storytype) => {
-  let randomInteger =  Math.floor(Math.random() * 8) + 1;
+// Generate an image with storytype and id. Use id to generate a hash between 1-8
+const randomImage = (storytype, id) => {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  let randomInteger = Math.abs(hash % 8) + 1;
   return `images/${storytype}-story-${randomInteger}.png`
 };
 
+// Get all stories from the api, use lastEvaluatedKey for pagination
 export const getStories = async (lastEvaluatedKey, storyType) => {
   const options = {
     method: "GET",
@@ -105,7 +108,7 @@ export const getStories = async (lastEvaluatedKey, storyType) => {
     const data = await response.json();
     // Add a random image to each story
     const storiesWithImages = data.translations.map((story) => {
-      story.image = randomImage(story.storyType);
+      story.image = randomImage(story.storyType, story.id);
       return story;
     });
     console.log(storiesWithImages)
