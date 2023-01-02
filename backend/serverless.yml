@@ -9,6 +9,7 @@ provider:
     OPENAI_API_KEY: ${ssm(eu-west-1):OPENAI_API_KEY}
     TRANSLATIONS_TABLE: "gtp-story-translations"
     AUDIO_BUCKET: "gtp-stories-audio-finnish"
+    SITE_URL: "https://satukone.rajalahti.me"
   apiGateway:
     apiKeys:
       - free:

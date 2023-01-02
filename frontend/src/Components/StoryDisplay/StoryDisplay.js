@@ -9,7 +9,7 @@ export const StoryDisplay = ({ story, prompt }) => {
         backgroundSize: "1000px",
         backgroundPosition: "center right",
         padding: '40px 20px 85px 20px',
-        paddingBottom: { xs: "180px", sm: "100px", md: "85px" },
+        paddingBottom: { xs: "200px", sm: "100px", md: "85px" },
         margin: '0 20px',
         filter: 'brightness(0.95) sepia(30%) saturate(80%)',
         borderRadius: '30px',

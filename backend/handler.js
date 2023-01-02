@@ -32,7 +32,7 @@ exports.selectFunction = async (event, context) => {
 // General headers for cors and content type
 const headers = {
   "Access-Control-Allow-Headers": "Content-Type",
-  "Access-Control-Allow-Origin": "*", // You can put your site's URL here or use the wildcard *
+  "Access-Control-Allow-Origin": process.env.SITE_URL, // You can put your site's URL here or use the wildcard *
   "Access-Control-Allow-Methods": "OPTIONS,GET", // Add methods if needed
 };
 
