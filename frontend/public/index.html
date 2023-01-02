@@ -9,6 +9,7 @@
       name="description"
       content="Satukone - Satujen ja tarinoiden luomiseen tarkoitettu sivu, joka hyödyntää tekoälyä."
     />
+    <meta name="image" property="og:image" content="fantasy.jpg">
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <!--
       manifest.json provides metadata used when your web app is installed on a
@@ -28,6 +29,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="reset.css" type="text/css" />
     <title>Satukone</title>
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-DY75HRDPB2"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-DY75HRDPB2");
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

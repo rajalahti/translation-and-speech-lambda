@@ -2,7 +2,6 @@ import React from "react";
 import { Box, Typography, Link } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { Link as RouterLink } from "react-router-dom";
-import fantasy from "./fantasy.jpg";
 
 export const Header = () => {
   const theme = useTheme();
@@ -10,7 +9,7 @@ export const Header = () => {
   return (
     <Box
       sx={{
-        backgroundImage: `url(${fantasy})`,
+        backgroundImage: `url('/fantasy.jpg')`,
         display: "flex",
         flexDirection: "column",
         justifyContent: "flex-end",
