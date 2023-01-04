@@ -6,6 +6,7 @@ import { Box } from "@mui/system";
 import InfiniteScroll from "react-infinite-scroller";
 import Grid from "@mui/material/Grid";
 
+
 export const StoryList = () => {
   const [stories, setStories] = useState([]);
   const [lastEvaluatedKey, setLastEvaluetedKey] = useState(null);
@@ -16,6 +17,9 @@ export const StoryList = () => {
       // if storyType is all then we don't need to pass it to the api
       const storyTypeParam = storyType === "all" ? null : storyType;
       const data = await getStories(lastEvaluatedKey, storyTypeParam);
+      // Filter out stories that do not have storyFi field
+      const filteredData = data.translations.filter(story => story.storyFi !== 'undefined')
+      setStories([...stories, ...filteredData]);
       setStories(data.translations);
       let key = JSON.parse(data.lastEvaluatedKey);
       key = key.id;
@@ -29,7 +33,9 @@ export const StoryList = () => {
       // if storyType is all then we don't need to pass it to the api
       const storyTypeParam = storyType === "all" ? null : storyType;
       const data = await getStories(lastEvaluatedKey, storyTypeParam);
-      setStories([...stories, ...data.translations]);
+      // Filter out stories that do not have storyFi field
+      const filteredData = data.translations.filter(story => story.storyFi !== 'undefined')
+      setStories([...stories, ...filteredData]);
       let key = data.lastEvaluatedKey
         ? JSON.parse(data.lastEvaluatedKey)
         : null;

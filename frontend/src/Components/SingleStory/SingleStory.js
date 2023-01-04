@@ -28,7 +28,7 @@ export const SingleStory = () => {
     const fetchStory = async () => {
       setLoading(true);
       const storyData = await getStoryById(id);
-      if (storyData !== "") {
+      if (storyData && storyData.storyFi) {
         setStory(storyData.storyFi);
         setPrompt(storyData.promptFi);
         setStoryId(storyData.id);
@@ -82,7 +82,7 @@ export const SingleStory = () => {
       return (
         <Player src={audio} autoPlay={false} grey={[22, 22, 22]} height={40} />
       );
-    } else if (audio === "" && story !== "") {
+    } else if (audio === "" && story !== "" && story.length > 0) {
       return (
         <Button
           variant="contained"
@@ -124,7 +124,7 @@ export const SingleStory = () => {
           {errorText}
         </Alert>
       </Snackbar>
-      {story ? <StoryDisplay story={story} prompt={prompt}  /> : ""}
+      {story.length > 0 ? <StoryDisplay story={story} prompt={prompt}  /> : ""}
     </Box>
   );
 };
