@@ -312,7 +312,7 @@ const randomStory = async (event) => {
   };
 };
 
-// function that fetches 10 random translations from DynamoDB with pagination and filters with storyType
+// function that fetches 20 random translations from DynamoDB with pagination and filters with storyType
 const stories = async (event) => {
   const dynamoDb = new AWS.DynamoDB.DocumentClient();
 
@@ -325,11 +325,12 @@ const stories = async (event) => {
  // Create params for the DynamoDB scan
   const params = {
     TableName: process.env.TRANSLATIONS_TABLE,
-    Limit: 10,
+    Limit: 20,
   };
 
-  // If storyType is set, add it to the params
+  // If storyType is set, add it to the params and increase the limit
   if (storyType) {
+    params.Limit = 50,
     params.FilterExpression = "storyType = :storyType";
     params.ExpressionAttributeValues = {
       ":storyType": storyType,

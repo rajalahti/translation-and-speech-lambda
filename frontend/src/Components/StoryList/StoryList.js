@@ -20,7 +20,6 @@ export const StoryList = () => {
       // Filter out stories that do not have storyFi field
       const filteredData = data.translations.filter(story => story.storyFi && story.storyFi.length > 0)
       setStories([...stories, ...filteredData]);
-      setStories(data.translations);
       let key = JSON.parse(data.lastEvaluatedKey);
       key = key.id;
       setLastEvaluetedKey(key);
