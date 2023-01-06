@@ -447,6 +447,7 @@ const generateStory = async (event) => {
     story = story.split("\n\n");
     story = story.filter((item) => item !== "");
 
+
     // Save the story to DynamoDB
     const dynamoDb = new AWS.DynamoDB.DocumentClient();
     const params = {
@@ -456,6 +457,7 @@ const generateStory = async (event) => {
         storyType: storyType,
         promptEn: prompt,
         storyEn: story,
+        timestamp: Date.now().toString(),
       },
     };
 
