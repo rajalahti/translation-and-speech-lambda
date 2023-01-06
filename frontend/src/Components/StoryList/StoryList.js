@@ -18,7 +18,7 @@ export const StoryList = () => {
       const storyTypeParam = storyType === "all" ? null : storyType;
       const data = await getStories(lastEvaluatedKey, storyTypeParam);
       // Filter out stories that do not have storyFi field
-      const filteredData = data.translations.filter(story => story.storyFi !== 'undefined')
+      const filteredData = data.translations.filter(story => story.storyFi && story.storyFi.length > 0)
       setStories([...stories, ...filteredData]);
       setStories(data.translations);
       let key = JSON.parse(data.lastEvaluatedKey);
@@ -34,7 +34,7 @@ export const StoryList = () => {
       const storyTypeParam = storyType === "all" ? null : storyType;
       const data = await getStories(lastEvaluatedKey, storyTypeParam);
       // Filter out stories that do not have storyFi field
-      const filteredData = data.translations.filter(story => story.storyFi !== 'undefined')
+      const filteredData = data.translations.filter(story => story.storyFi && story.storyFi.length > 0)
       setStories([...stories, ...filteredData]);
       let key = data.lastEvaluatedKey
         ? JSON.parse(data.lastEvaluatedKey)
