@@ -57,3 +57,33 @@ You can add these parameters by running the following AWS CLI command:
 The frontend has a story generator component where the user can choose a story type and enter a prompt. 
 
 It also has a list of all previous generated stories.
+
+## How to install and run
+
+### Pre-requisites:
+- Register an AWS-account
+- Set UP AWS CLI V2 (https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+- Setup Serverless (https://www.serverless.com/framework/docs/getting-started)
+- Create an account for DeepL Translator API Free version (https://www.deepl.com/pro-api?cta=header-pro-api/)
+- Create an account for Open AI API (https://openai.com/api/)
+- Install NodeJS (https://nodejs.org/en/)
+
+### Deploy backend
+- Add your DeepL API key to AWS SSM by running the terminal command: "aws ssm put-parameter --name DEEPL_AUTH_KEY --type String --value {DEEPL API-KEY-HERE}"
+- Add your OpenAI API key to AWS SSM by running the terminal command: "aws ssm put-parameter --name OPENAI_API_KEY --type String --value {OPENAI API-KEY-HERE}"
+- Change the name of the AUDIO_BUCKET (must be unique) the refenence to BucketName and SITE_URL in serverless.yml
+- In backend folder run the terminal command "sls deploy" to deploy the backend lambdas
+- In AWS management console make the S3 bucket and all the items public by default (mp3 files created by AWS Polly will be placed here and need to be publicly accessible)
+- When the deploy finishes you will get the API key and API endpoint for the deployed API
+
+### Run the frontend
+- Open frontend folder in terminal
+- npm install
+- Create .env -file for environtment variables
+- Add variables for REACT_APP_API_ENDPOINT and REACT_APP_API_KEY (which you got after deploying the backend with serverless)
+- Run the frontend app locally by running terminal command "npm start"
+- NOTE: API requests will be blocked by CORS when the request are not coming from your SITE_URL that you set before. You can bypass this by using this Chrome extension (https://chrome.google.com/webstore/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf?hl=en)
+
+### Deploying the frontend
+- Many options exists but one good option would be to use an S3 bucket and Cloudfront on AWS
+- Follow this guide to deploy: https://youtu.be/CQ8vzm1kYkM?t=322
