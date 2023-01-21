@@ -5,15 +5,25 @@
     It uses the  functions GenerateStories, getAudio, translate from Api.js
 */
 import React, { useState } from "react";
-import { CircularProgress, Button, TextField, Box } from "@mui/material";
-import { generateStory, getAudioUrl, translate, getStoryById } from "../../Utils/Api/Api";
+import {
+  CircularProgress,
+  Button,
+  TextField,
+  Typography,
+  Box,
+} from "@mui/material";
+import {
+  generateStory,
+  getAudioUrl,
+  translate,
+  getStoryById,
+} from "../../Utils/Api/Api";
 import { Player } from "react-simple-player";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import { StoryDisplay } from "../StoryDisplay/StoryDisplay";
 import ToggleButtons from "../InputComponents/ButtonGroup";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
-
 
 // UUID generator for stories
 const getUUID = () => {
@@ -30,16 +40,18 @@ export const GenerateStories = () => {
   const [storyId, setStoryId] = useState("");
   const [audio, setAudio] = useState("");
   const [prompt, setPrompt] = useState("");
+  const [currentStoryPrompt, setCurrentStoryPrompt] = useState("");
   const [loading, setLoading] = useState(false);
   const [audioLoading, setAudioLoading] = useState(false);
+  const [loadingStatus, setLoadingStatus] = useState("");
   const [error, setError] = useState(false);
   const [errorText, setErrorText] = useState("");
-  
 
   const resetStory = () => {
     setStory([]);
     setStoryId("");
     setAudio("");
+    setLoadingStatus("");
   };
 
   /*
@@ -47,40 +59,40 @@ export const GenerateStories = () => {
     Starts a timer and after every 10 seconds makes a call to /stories/{storyId}
     to see if the story has been generated. After three tries, the error is shown to the user.
   */
-    const customErrorHandler = async (id) => {
-      let counter = 0;
-      let interval = setInterval(async () => {
-        counter++;
-        let storyData = "";
-        while (storyData === "" || counter > 3) {
-          storyData = await getStoryById(id);
-          if (storyData !== "") {
+  const customErrorHandler = async (id) => {
+    let counter = 0;
+    let interval = setInterval(async () => {
+      counter++;
+      let storyData = "";
+      while (storyData === "" || counter > 3) {
+        storyData = await getStoryById(id);
+        if (storyData !== "") {
+          clearInterval(interval);
+          let translatedStory = await translate(
+            storyData.story,
+            "FI",
+            true,
+            storyType,
+            prompt,
+            id
+          );
+          console.log(translatedStory);
+          //Split the story into an array of paragraphs using | as a delimiter
+          setStory(translatedStory.translation);
+          setLoading(false);
+          return;
+        } else {
+          if (counter > 3) {
             clearInterval(interval);
-            let translatedStory = await translate(
-              storyData.story,
-              "FI",
-              true,
-              storyType,
-              prompt,
-              id
-            );
-            console.log(translatedStory);
-            //Split the story into an array of paragraphs using | as a delimiter
-            setStory(translatedStory.translation);
+            handleErrorOpen("Virhe: Palvelu ei vastaa");
             setLoading(false);
             return;
-          } else {
-            if (counter > 3) {
-              clearInterval(interval);
-              handleErrorOpen("Virhe: Palvelu ei vastaa");
-              setLoading(false);
-              return;
-            }
           }
-          counter++;
         }
-      }, 10000);
-    };
+        counter++;
+      }
+    }, 10000);
+  };
 
   // This function translates the prompt and generates the story
   const handleStoryGeneration = async () => {
@@ -92,12 +104,17 @@ export const GenerateStories = () => {
     let id = getUUID();
     setStoryId(id);
     // Translate the prompt
+    setLoadingStatus("Käännetään aihetta...");
     try {
       let translatedPrompt = await translate(prompt, "EN", false);
       translatedPrompt = translatedPrompt.translation;
       // Generate the story, set the story
+      setLoadingStatus(
+        "Aihe englanniksi: " + translatedPrompt + ". Luodaan tarina..."
+      );
       const storyData = await generateStory(translatedPrompt, storyType, id);
       console.log(storyData);
+      setLoadingStatus("Käännetään tarinaa...");
       let translatedStory = await translate(
         storyData.story,
         "FI",
@@ -107,8 +124,10 @@ export const GenerateStories = () => {
         id
       );
       console.log(translatedStory);
+      setCurrentStoryPrompt(prompt);
       //Split the story into an array of paragraphs using | as a delimiter
       setStory(translatedStory.translation);
+      setLoadingStatus("");
       setLoading(false);
     } catch (error) {
       console.log(error);
@@ -116,11 +135,10 @@ export const GenerateStories = () => {
       if (error.response.status === 504) {
         // If the error status is 504, start custom error handling
         customErrorHandler(id);
-    } else {
-      console.log(error)
+      } else {
+        console.log(error);
+      }
     }
-  }
-
   };
 
   // This function gets the audio url for the story
@@ -182,7 +200,7 @@ export const GenerateStories = () => {
 
   return (
     <Box sx={{ maxWidth: 1000, margin: "50px auto" }}>
-      <Box sx={{ width: "100%", mb: 4, textAlign: "left", mx: 3 }}>
+      <Box sx={{ mb: 4, textAlign: "left", mx: 3 }}>
         <ToggleButtons storyType={storyType} setStoryType={setStoryType} />
       </Box>
 
@@ -205,14 +223,25 @@ export const GenerateStories = () => {
           onChange={(e) => setPrompt(e.target.value)}
           sx={{ flexGrow: 2 }}
         />
-        <Button variant="contained" onClick={handleStoryGeneration} disabled={loading || !prompt}>
+        <Button
+          variant="contained"
+          onClick={handleStoryGeneration}
+          disabled={loading || !prompt}
+        >
           Luo tarina
         </Button>
       </Box>
       <Box sx={{ my: 5, mx: 3, display: "flex", justifyContent: "start" }}>
         {displayPlayer()}
       </Box>
-      {loading ? <CircularProgress /> : ""}
+      {loading ? (
+        <React.Fragment>
+          <CircularProgress />
+          <Typography variant="body" sx={{ mx: 3, mt: 2, color: "#CAB09C;", display: 'block' }}>{loadingStatus}</Typography>
+        </React.Fragment>
+      ) : (
+        ""
+      )}
       <Snackbar open={error} autoHideDuration={6000} onClose={handleErrorClose}>
         <Alert
           onClose={handleErrorClose}
@@ -223,7 +252,11 @@ export const GenerateStories = () => {
         </Alert>
       </Snackbar>
 
-      {story.length > 0 ? <StoryDisplay story={story} prompt={prompt} /> : ""}
+      {story.length > 0 ? (
+        <StoryDisplay story={story} prompt={currentStoryPrompt} />
+      ) : (
+        ""
+      )}
     </Box>
   );
 };
