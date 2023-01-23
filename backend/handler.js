@@ -8,6 +8,8 @@ exports.selectFunction = async (event, context) => {
   // use the path variable to direct the request to the correct function
   if (path === "/translate") {
     return await translate(event, context);
+  } else if (path === "/recaptcha") {
+    return await recaptcha(event, context);
   } else if (path === "/speech") {
     return await speech(event, context);
   } else if (path === "/random-story") {
@@ -35,6 +37,35 @@ const headers = {
   "Access-Control-Allow-Origin": process.env.SITE_URL, // You can put your site's URL here or use the wildcard *
   "Access-Control-Allow-Methods": "OPTIONS,GET", // Add methods if needed
 };
+
+// Check the recaptcha token and validate it
+const recaptcha = async (event, context) => {
+  // Get the recaptcha token from the event body
+  const body = JSON.parse(event.body);
+  const token = body.token;
+
+  // Set the options for the request to the Google recaptcha API
+  const options = {
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+  };
+
+  // Make the request to the Google recaptcha API
+  const response = await axios.post(
+    "https://www.google.com/recaptcha/api/siteverify",
+    `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`,
+    options
+  );
+
+  // Return the response from the Google recaptcha API
+  return {
+    statusCode: 200,
+    headers,
+    body: JSON.stringify(response.data),
+  };
+};
+
 
 const translate = async (event, context) => {
   // Get the text to be translated from the event body and get a save parameter and language
@@ -67,6 +98,7 @@ const translate = async (event, context) => {
 
     // Get the translated text from the response
     let translatedText = response.data.translations[0].text;
+    let detectedLanguage = response.data.translations[0].detected_source_language;
 
     // If the english story in text contains | characters, split the story into an array of paragraphs
     let storyEn = text;
@@ -125,7 +157,7 @@ const translate = async (event, context) => {
     return {
       statusCode: 200,
       headers: headers,
-      body: JSON.stringify({ translation: translatedText }),
+      body: JSON.stringify({ translation: translatedText, detectedLanguage: detectedLanguage }),
     };
   } catch (error) {
     if (error.response) {

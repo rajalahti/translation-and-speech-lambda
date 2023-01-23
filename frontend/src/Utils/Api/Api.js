@@ -137,3 +137,24 @@ export const getStoryById = async (id) => {
     throw new Error(error);
   }
 };
+
+// POST check recaptcha
+export const checkRecaptcha = async (token) => {
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": process.env.REACT_APP_API_KEY,
+    },
+    body: JSON.stringify({ token: token }),
+  };
+
+  try {
+    const response = await fetch(endpoint + "/recaptcha", options);
+    const data = await response.json();
+    console.log(data)
+    return data;
+  } catch (error) {
+    throw new Error(error);
+  }
+}

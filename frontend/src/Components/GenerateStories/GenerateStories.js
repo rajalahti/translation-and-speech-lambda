@@ -4,7 +4,7 @@
     It uses the MUI components Typography, Button, TextField, Box
     It uses the  functions GenerateStories, getAudio, translate from Api.js
 */
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   CircularProgress,
   Button,
@@ -17,6 +17,7 @@ import {
   getAudioUrl,
   translate,
   getStoryById,
+  checkRecaptcha
 } from "../../Utils/Api/Api";
 import { Player } from "react-simple-player";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
@@ -24,6 +25,7 @@ import { StoryDisplay } from "../StoryDisplay/StoryDisplay";
 import ToggleButtons from "../InputComponents/ButtonGroup";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
+import ReCAPTCHA from "react-google-recaptcha";
 
 // UUID generator for stories
 const getUUID = () => {
@@ -52,7 +54,10 @@ export const GenerateStories = () => {
     setStoryId("");
     setAudio("");
     setLoadingStatus("");
+    reCaptchaRef.current.reset();
   };
+
+  const reCaptchaRef = useRef();
 
   /*
     Custom error handler for 504 errors from API gateway:
@@ -96,18 +101,39 @@ export const GenerateStories = () => {
 
   // This function translates the prompt and generates the story
   const handleStoryGeneration = async () => {
+    // If propt or storyType is empty, return
+    if (prompt === "") return;
+    if (storyType === "") return;
+
     setLoading(true);
     resetStory();
-    // If propt is empty, return
-    if (prompt === "") return;
+    // Get the recaptcha token
+    let token = await reCaptchaRef.current.executeAsync();
+    // Check the recaptcha token
+    let recaptchaResponse = await checkRecaptcha(token);
+    if (recaptchaResponse.success === false) {
+      handleErrorOpen("Virhe: ReCAPTCHA ei onnistunut");
+      setLoading(false);
+      return;
+    }
+    
     // Generate a UUID for the story
     let id = getUUID();
     setStoryId(id);
     // Translate the prompt
     setLoadingStatus("Käännetään aihetta...");
     try {
-      let translatedPrompt = await translate(prompt, "EN", false);
-      translatedPrompt = translatedPrompt.translation;
+      let translationResponse = await translate(prompt, "EN", false);
+      let translatedPrompt = translationResponse.translation;
+      let detectedLanguage = translationResponse.detectedLanguage;
+      // If the detected language is "RU", show an error"
+      if (detectedLanguage === "RU") {
+        handleErrorOpen("ERROR: Russian is not supported.");
+        setLoading(false);
+        setLoadingStatus(false);
+        resetStory();
+        return;
+      }
       // Generate the story, set the story
       setLoadingStatus(
         "Aihe englanniksi: " + translatedPrompt + ". Luodaan tarina..."
@@ -223,6 +249,11 @@ export const GenerateStories = () => {
           onChange={(e) => setPrompt(e.target.value)}
           sx={{ flexGrow: 2 }}
         />
+        <ReCAPTCHA
+          sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
+          size="invisible"
+          ref={reCaptchaRef}
+        />
         <Button
           variant="contained"
           onClick={handleStoryGeneration}
@@ -237,7 +268,12 @@ export const GenerateStories = () => {
       {loading ? (
         <React.Fragment>
           <CircularProgress />
-          <Typography variant="body" sx={{ mx: 3, mt: 2, color: "#CAB09C;", display: 'block' }}>{loadingStatus}</Typography>
+          <Typography
+            variant="body"
+            sx={{ mx: 3, mt: 2, color: "#CAB09C;", display: "block" }}
+          >
+            {loadingStatus}
+          </Typography>
         </React.Fragment>
       ) : (
         ""

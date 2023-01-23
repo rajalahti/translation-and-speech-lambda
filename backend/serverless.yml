@@ -3,10 +3,12 @@ service: polly-translation
 provider:
   name: aws
   runtime: nodejs12.x
+  timeout: 60
   region: eu-west-1
   environment:
     DEEPL_AUTH_KEY: ${ssm(eu-west-1):DEEPL_AUTH_KEY}
     OPENAI_API_KEY: ${ssm(eu-west-1):OPENAI_API_KEY}
+    RECAPTCHA_SECRET_KEY: ${ssm(eu-west-1):RECAPTCHA_SECRET_KEY}
     TRANSLATIONS_TABLE: "gtp-story-translations"
     AUDIO_BUCKET: "gtp-stories-audio-finnish"
     SITE_URL: "https://satukone.rajalahti.me"
@@ -72,6 +74,11 @@ functions:
           private: true
       - http:
           path: /generate-story
+          method: post
+          private: true
+          cors: true
+      - http:
+          path: /recaptcha
           method: post
           private: true
           cors: true
