@@ -4,6 +4,16 @@ const AWS = require("aws-sdk");
 // exports handler that directs the request to the correct function based on the path
 exports.selectFunction = async (event, context) => {
   const { path } = event;
+  
+  // Only allow request from the site's URL (https://satukone.rajalahti.me)
+  if (event.headers.origin !== process.env.SITE_URL) {
+    return {
+      statusCode: 403,
+      body: JSON.stringify({
+        error: "Forbidden",
+      }),
+    };
+  }
 
   // use the path variable to direct the request to the correct function
   if (path === "/translate") {
@@ -34,8 +44,8 @@ exports.selectFunction = async (event, context) => {
 // General headers for cors and content type
 const headers = {
   "Access-Control-Allow-Headers": "Content-Type",
-  "Access-Control-Allow-Origin": process.env.SITE_URL, // You can put your site's URL here or use the wildcard *
-  "Access-Control-Allow-Methods": "OPTIONS,GET", // Add methods if needed
+  "Access-Control-Allow-Origin": process.env.SITE_URL,
+  "Access-Control-Allow-Methods": "OPTIONS,POST,GET",
 };
 
 // Check the recaptcha token and validate it
@@ -84,7 +94,7 @@ const translate = async (event, context) => {
     // Set the options for the request to the DeepL API
     const options = {
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Type": "application/json",
         Authorization: `DeepL-Auth-Key ${deepLKey}`,
       },
     };
@@ -92,7 +102,7 @@ const translate = async (event, context) => {
     // Make the request to the DeepL API
     const response = await axios.post(
       "https://api-free.deepl.com/v2/translate",
-      `text=${encodeURIComponent(text)}&target_lang=${language}`,
+      { text: [text], target_lang: language },
       options
     );
 
@@ -163,20 +173,23 @@ const translate = async (event, context) => {
     if (error.response) {
       // The request was made and the server responded with a status code that indicates an error
       return {
+        statusCode: 500,
         headers: headers,
-        error: `Server responded with a ${error.response.status} error`,
+        body: `Server responded with a ${error.response.status} error`,
       };
     } else if (error.request) {
       // The request was made but no response was received
       return {
+        statusCode: 500,
         headers: headers,
-        error: "No response was received from the server",
+        body: JSON.stringify(error),
       };
     } else {
       // Something else went wrong
       return {
+        statusCode: 500,
         headers: headers,
-        error: error.message,
+        body: error.message,
       };
     }
   }
@@ -220,7 +233,7 @@ const speech = async (event) => {
       statusCode: 500,
       headers: headers,
       body: JSON.stringify({
-        error: "Error translating text",
+        error: error.message,
       }),
     };
   }
@@ -354,7 +367,7 @@ const stories = async (event) => {
     storyType = event.queryStringParameters.storyType;
   }
 
- // Create params for the DynamoDB scan
+  // Create params for the DynamoDB scan
   const params = {
     TableName: process.env.TRANSLATIONS_TABLE,
     Limit: 20,
@@ -363,7 +376,7 @@ const stories = async (event) => {
   // If storyType is set, add it to the params and increase the limit
   if (storyType) {
     params.Limit = 50,
-    params.FilterExpression = "storyType = :storyType";
+      params.FilterExpression = "storyType = :storyType";
     params.ExpressionAttributeValues = {
       ":storyType": storyType,
     };
@@ -450,30 +463,35 @@ const generateStory = async (event) => {
   const storyId = body.storyId;
 
   try {
+
     // Get the OPENAI_API_KEY from the environment
     const openAIKey = process.env.OPENAI_API_KEY;
 
-    // Make the request to the OpenAI API
     const response = await axios.post(
-      "https://api.openai.com/v1/completions",
+      "https://api.openai.com/v1/chat/completions",
       {
-        model: "text-davinci-003",
-        prompt: `You are a storyteller. Tell a ${storyType} story about this subject: ${prompt}`,
-        temperature: 0.9,
-        max_tokens: 500,
-        top_p: 1,
-        frequency_penalty: 0,
-        presence_penalty: 0,
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "system",
+            content: "You are a storyteller.",
+          },
+          {
+            role: "user",
+            content: `Tell a ${storyType} story about this subject: ${prompt}`,
+          },
+        ],
       },
       {
         headers: {
           Authorization: `Bearer ${openAIKey}`,
+          "Content-Type": "application/json",
         },
       }
     );
 
     // Get the response from the OpenAI API
-    let story = response.data.choices[0].text;
+    let story = response.data.choices[0].message.content;
 
     // Split the story into an array of paragraphs by usin the \n\n characters
     story = story.split("\n\n");

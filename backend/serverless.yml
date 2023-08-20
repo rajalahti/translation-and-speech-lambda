@@ -2,8 +2,8 @@ service: polly-translation
 
 provider:
   name: aws
-  runtime: nodejs12.x
-  timeout: 60
+  runtime: nodejs14.x
+  timeout: 30
   region: eu-west-1
   environment:
     DEEPL_AUTH_KEY: ${ssm(eu-west-1):DEEPL_AUTH_KEY}
@@ -105,4 +105,3 @@ resources:
           IgnorePublicAcls: false
           BlockPublicPolicy: false
           RestrictPublicBuckets: false
-        AccessControl: PublicRead
