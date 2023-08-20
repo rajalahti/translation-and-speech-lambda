@@ -214,36 +214,34 @@ const speech = async (event) => {
     };
   }
 
-  // Set the parameters for the AWS Polly request
-  const params = {
-    OutputFormat: "mp3",
-    VoiceId: "Suvi",
-    Text: text,
-    Engine: "neural",
-    TextType: "text",
-    LanguageCode: "fi-FI",
-  };
+  // Split the text into parts of 3000 characters or less
+  const textParts = text.match(/.{1,3000}/g);
 
-  let result;
-  try {
-    // Synthetize the text to speech using AWS Polly
-    result = await polly.synthesizeSpeech(params).promise();
-  } catch (error) {
-    return {
-      statusCode: 500,
-      headers: headers,
-      body: JSON.stringify({
-        error: error.message,
-      }),
-    };
-  }
+  // Generate an audio stream for each text part in parallel
+  const audioStreams = await Promise.all(
+    textParts.map(async (part) => {
+      const params = {
+        OutputFormat: "mp3",
+        VoiceId: "Suvi",
+        Text: part,
+        Engine: "neural",
+        TextType: "text",
+        LanguageCode: "fi-FI",
+      };
+      const result = await polly.synthesizeSpeech(params).promise();
+      return result.AudioStream;
+    })
+  );
+
+  // Concatenate the audio streams into a single buffer
+  const audioBuffer = Buffer.concat(audioStreams);
 
   // Save the audio to S3 as an mp3 file with the id as the name
   const s3 = new AWS.S3();
   const s3Params = {
     Bucket: process.env.AUDIO_BUCKET,
     Key: `${id}.mp3`,
-    Body: result.AudioStream,
+    Body: audioBuffer,
     ContentType: "audio/mpeg",
   };
 
