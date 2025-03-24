@@ -452,31 +452,38 @@ const story = async (event, storyId) => {
   }
 };
 
-// A function that uses axios to fetch a random story by calling OpenAI's API (model: davinci-3)
+// A function that uses axios to fetch a story by calling OpenAI's API (gpt-4o)
 const generateStory = async (event) => {
   const body = JSON.parse(event.body);
 
   const prompt = body.prompt;
   const storyType = body.storyType;
   const storyId = body.storyId;
+  const language = body.language || "finnish"; // Default to Finnish if not specified
 
   try {
-
     // Get the OPENAI_API_KEY from the environment
     const openAIKey = process.env.OPENAI_API_KEY;
+
+    // Create message content based on the language
+    const messageContent = language === "finnish" 
+      ? `${prompt}` // Use the Finnish prompt directly
+      : `Tell a ${storyType} story about this subject: ${prompt}`;
 
     const response = await axios.post(
       "https://api.openai.com/v1/chat/completions",
       {
-        model: "gpt-3.5-turbo",
+        model: "gpt-4o",
         messages: [
           {
             role: "system",
-            content: "You are a storyteller.",
+            content: language === "finnish" 
+              ? "Olet tarinankertoja. Kirjoita tarinat suomen kielellä." 
+              : "You are a storyteller.",
           },
           {
             role: "user",
-            content: `Tell a ${storyType} story about this subject: ${prompt}`,
+            content: messageContent,
           },
         ],
       },
@@ -491,10 +498,9 @@ const generateStory = async (event) => {
     // Get the response from the OpenAI API
     let story = response.data.choices[0].message.content;
 
-    // Split the story into an array of paragraphs by usin the \n\n characters
+    // Split the story into an array of paragraphs by using the \n\n characters
     story = story.split("\n\n");
     story = story.filter((item) => item !== "");
-
 
     // Save the story to DynamoDB
     const dynamoDb = new AWS.DynamoDB.DocumentClient();
@@ -503,8 +509,8 @@ const generateStory = async (event) => {
       Item: {
         id: storyId,
         storyType: storyType,
-        promptEn: prompt,
-        storyEn: story,
+        promptFi: prompt,      // Store as promptFi since we're using Finnish directly
+        storyFi: story,        // Store as storyFi since the story is in Finnish
         timestamp: Date.now().toString(),
       },
     };
@@ -521,7 +527,7 @@ const generateStory = async (event) => {
       };
     }
 
-    // Combine the story again for translation, replace put a | between paragraphs
+    // Combine the story again, place a | between paragraphs
     story = story.join(" | ");
 
     // Return the story
