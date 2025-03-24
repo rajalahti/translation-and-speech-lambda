@@ -27,8 +27,7 @@ export const translate = async (text, language, save, storyType, prompt, storyId
   }
 };
 
-// Generate a story from the API
-
+// Generate a story from the API - simplified to directly handle Finnish prompts
 export const generateStory = async (prompt, storyType, storyId) => {
   const options = {
     method: "POST",
@@ -36,7 +35,12 @@ export const generateStory = async (prompt, storyType, storyId) => {
       "Content-Type": "application/json",
       "x-api-key": process.env.REACT_APP_API_KEY,
     },
-    body: JSON.stringify({ prompt: prompt, storyType: storyType, storyId: storyId }),
+    body: JSON.stringify({ 
+      prompt: prompt, 
+      storyType: storyType, 
+      storyId: storyId,
+      language: "finnish" // Explicitly set the language to Finnish
+    }),
   };
 
   try {

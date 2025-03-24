@@ -2,7 +2,7 @@
     This component is used to generate stories for the user.
     It is used in the App.
     It uses the MUI components Typography, Button, TextField, Box
-    It uses the  functions GenerateStories, getAudio, translate from Api.js
+    It uses the functions generateStory, getAudio from Api.js
 */
 import React, { useState, useRef } from "react";
 import {
@@ -15,7 +15,6 @@ import {
 import {
   generateStory,
   getAudioUrl,
-  translate,
   getStoryById,
   checkRecaptcha
 } from "../../Utils/Api/Api";
@@ -73,17 +72,9 @@ export const GenerateStories = () => {
         storyData = await getStoryById(id);
         if (storyData !== "") {
           clearInterval(interval);
-          let translatedStory = await translate(
-            storyData.story,
-            "FI",
-            true,
-            storyType,
-            prompt,
-            id
-          );
-          console.log(translatedStory);
           //Split the story into an array of paragraphs using | as a delimiter
-          setStory(translatedStory.translation);
+          const storyArray = storyData.story.split("|");
+          setStory(storyArray);
           setLoading(false);
           return;
         } else {
@@ -99,9 +90,9 @@ export const GenerateStories = () => {
     }, 10000);
   };
 
-  // This function translates the prompt and generates the story
+  // This function generates the story
   const handleStoryGeneration = async () => {
-    // If propt or storyType is empty, return
+    // If prompt or storyType is empty, return
     if (prompt === "") return;
     if (storyType === "") return;
 
@@ -120,49 +111,31 @@ export const GenerateStories = () => {
     // Generate a UUID for the story
     let id = getUUID();
     setStoryId(id);
-    // Translate the prompt
-    setLoadingStatus("Käännetään aihetta...");
+    
+    // Generate the story directly in Finnish
+    setLoadingStatus("Luodaan tarina...");
     try {
-      let translationResponse = await translate(prompt, "EN", false);
-      let translatedPrompt = translationResponse.translation;
-      let detectedLanguage = translationResponse.detectedLanguage;
-      // If the detected language is "RU", show an error"
-      if (detectedLanguage === "RU") {
-        handleErrorOpen("ERROR: Russian is not supported.");
-        setLoading(false);
-        setLoadingStatus(false);
-        resetStory();
-        return;
-      }
-      // Generate the story, set the story
-      setLoadingStatus(
-        "Aihe englanniksi: " + translatedPrompt + ". Luodaan tarina..."
-      );
-      const storyData = await generateStory(translatedPrompt, storyType, id);
+      // Include instruction to generate in Finnish in the prompt
+      const finnishPrompt = `Kirjoita tarina suomeksi aiheesta: ${prompt}`;
+      const storyData = await generateStory(finnishPrompt, storyType, id);
       console.log(storyData);
-      setLoadingStatus("Käännetään tarinaa...");
-      let translatedStory = await translate(
-        storyData.story,
-        "FI",
-        true,
-        storyType,
-        prompt,
-        id
-      );
-      console.log(translatedStory);
+      
       setCurrentStoryPrompt(prompt);
+      
       //Split the story into an array of paragraphs using | as a delimiter
-      setStory(translatedStory.translation);
+      const storyArray = storyData.story.split("|");
+      setStory(storyArray);
       setLoadingStatus("");
       setLoading(false);
     } catch (error) {
       console.log(error);
       // If the error status is 504, start custom error handling
-      if (error.response.status === 504) {
+      if (error.response && error.response.status === 504) {
         // If the error status is 504, start custom error handling
         customErrorHandler(id);
       } else {
-        console.log(error);
+        handleErrorOpen("Virhe: Tarinan luominen epäonnistui");
+        setLoading(false);
       }
     }
   };
@@ -194,30 +167,6 @@ export const GenerateStories = () => {
     }
     setError(false);
     setErrorText("");
-  };
-
-  // If audio is not empty and story is not empty, display Player component
-  // If audio is empty and story is not empty, display Button component
-  // If story is empty, display nothing
-  const displayPlayer = () => {
-    if (audioLoading) return <CircularProgress />;
-    if (audio !== "" && story.length > 0) {
-      return (
-        <Player src={audio} autoPlay={true} grey={[22, 22, 22]} height={40} />
-      );
-    } else if (audio === "" && story.length > 0) {
-      return (
-        <Button
-          variant="contained"
-          onClick={handleAudioUrlFetch}
-          startIcon={<VolumeUpIcon />}
-        >
-          Kuuntele
-        </Button>
-      );
-    } else {
-      return "";
-    }
   };
 
   const Alert = React.forwardRef((props, ref) => {
@@ -262,22 +211,65 @@ export const GenerateStories = () => {
           Luo tarina
         </Button>
       </Box>
-      <Box sx={{ my: 5, mx: 3, display: "flex", justifyContent: "start" }}>
-        {displayPlayer()}
-      </Box>
-      {loading ? (
-        <React.Fragment>
-          <CircularProgress />
-          <Typography
-            variant="body"
-            sx={{ mx: 3, mt: 2, color: "#CAB09C;", display: "block" }}
+      
+      {/* Loading indicator and audio controls row */}
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        mx: 3, 
+        mb: 2,
+        flexWrap: 'wrap',
+        gap: 2
+      }}>
+        {/* Loading status */}
+        {loading ? (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <CircularProgress size={30} />
+            <Typography
+              variant="body2"
+              sx={{ color: "#9A7F66" }}
+            >
+              {loadingStatus}
+            </Typography>
+          </Box>
+        ) : (
+          <Box />
+        )}
+        
+        {/* Audio player or button */}
+        {audioLoading ? (
+          <CircularProgress size={30} sx={{ color: '#7c4c16' }} />
+        ) : audio ? (
+          <Box sx={{ 
+            background: 'rgba(255, 255, 255, 0.9)', 
+            borderRadius: '4px', 
+            padding: '5px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            minWidth: { xs: '100%', sm: 'auto' },
+            ml: 'auto'
+          }}>
+            <Player src={audio} autoPlay={true} grey={[22, 22, 22]} height={40} />
+          </Box>
+        ) : story.length > 0 ? (
+          <Button
+            variant="contained"
+            onClick={handleAudioUrlFetch}
+            startIcon={<VolumeUpIcon />}
+            sx={{ 
+              backgroundColor: '#7c4c16',
+              '&:hover': {
+                backgroundColor: '#5e3a10',
+              },
+              minWidth: { xs: '100%', sm: 'auto' },
+              ml: 'auto'
+            }}
           >
-            {loadingStatus}
-          </Typography>
-        </React.Fragment>
-      ) : (
-        ""
-      )}
+            Kuuntele
+          </Button>
+        ) : null}
+      </Box>
+
       <Snackbar open={error} autoHideDuration={6000} onClose={handleErrorClose}>
         <Alert
           onClose={handleErrorClose}
@@ -289,10 +281,13 @@ export const GenerateStories = () => {
       </Snackbar>
 
       {story.length > 0 ? (
-        <StoryDisplay story={story} prompt={currentStoryPrompt} />
+        <StoryDisplay 
+          story={story} 
+          prompt={currentStoryPrompt}
+        />
       ) : (
         ""
       )}
     </Box>
   );
-};
+}

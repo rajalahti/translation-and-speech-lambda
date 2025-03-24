@@ -73,48 +73,69 @@ export const SingleStory = () => {
     setErrorText("");
   };
 
-  // If audio is not empty and story is not empty, display Player component
-  // If audio is empty and story is not empty, display Button component
-  // If story is empty, display nothing
-  const displayPlayer = () => {
-    if (audioLoading) return <CircularProgress />;
-    if (audio !== "" && story !== "") {
-      return (
-        <Player src={audio} autoPlay={false} grey={[22, 22, 22]} height={40} />
-      );
-    } else if (audio === "" && story !== "" && story.length > 0) {
-      return (
-        <Button
-          variant="contained"
-          onClick={handleAudioUrlFetch}
-          startIcon={<VolumeUpIcon />}
-        >
-          Kuuntele
-        </Button>
-      );
-    } else {
-      return "";
-    }
-  };
-
   const Alert = React.forwardRef((props, ref) => {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
   });
 
   return (
     <Box sx={{ maxWidth: 1000, margin: "50px auto", textAlign: 'left' }}>
-      <Link
-        component={RouterLink}
-        to="/selaa-tarinoita"
-        underline="none"
-        sx={{ fontSize: 16, fontWeight: 700, mx: 4, mb: 1 }}
-      >
-        <ArrowBackIcon sx={{position: 'relative', top: 6}} />  Takaisin
-      </Link>
-      <Box sx={{ my: 5, mx: 3, display: "flex", justifyContent: "start" }}>
-        {displayPlayer()}
+      {/* Navigation and audio controls row */}
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        mx: 4, 
+        mb: 2,
+        flexWrap: 'wrap',
+        gap: 2
+      }}>
+        {/* Back button */}
+        <Link
+          component={RouterLink}
+          to="/selaa-tarinoita"
+          underline="none"
+          sx={{ 
+            fontSize: 16, 
+            fontWeight: 700, 
+            display: 'flex',
+            alignItems: 'center'
+          }}
+        >
+          <ArrowBackIcon sx={{ marginRight: 1 }} /> Takaisin
+        </Link>
+        
+        {/* Audio player or button */}
+        {audioLoading ? (
+          <CircularProgress size={30} sx={{ color: '#7c4c16' }} />
+        ) : audio ? (
+          <Box sx={{ 
+            background: 'rgba(255, 255, 255, 0.9)', 
+            borderRadius: '4px', 
+            padding: '5px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            minWidth: { xs: '100%', sm: 'auto' }
+          }}>
+            <Player src={audio} autoPlay={false} grey={[22, 22, 22]} height={40} />
+          </Box>
+        ) : story.length > 0 ? (
+          <Button
+            variant="contained"
+            onClick={handleAudioUrlFetch}
+            startIcon={<VolumeUpIcon />}
+            sx={{ 
+              backgroundColor: '#7c4c16',
+              '&:hover': {
+                backgroundColor: '#5e3a10',
+              },
+              minWidth: { xs: '100%', sm: 'auto' }
+            }}
+          >
+            Kuuntele
+          </Button>
+        ) : null}
       </Box>
-      {loading ? <CircularProgress /> : ""}
+
+      {loading ? <CircularProgress sx={{ m: 4 }} /> : ""}
       <Snackbar open={error} autoHideDuration={6000} onClose={handleErrorClose}>
         <Alert
           onClose={handleErrorClose}
@@ -124,7 +145,12 @@ export const SingleStory = () => {
           {errorText}
         </Alert>
       </Snackbar>
-      {story.length > 0 ? <StoryDisplay story={story} prompt={prompt}  /> : ""}
+      {story.length > 0 ? (
+        <StoryDisplay 
+          story={story} 
+          prompt={prompt}
+        /> 
+      ) : ""}
     </Box>
   );
 };
