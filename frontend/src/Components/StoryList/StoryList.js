@@ -17,8 +17,8 @@ export const StoryList = () => {
       // if storyType is all then we don't need to pass it to the api
       const storyTypeParam = storyType === "all" ? null : storyType;
       const data = await getStories(lastEvaluatedKey, storyTypeParam);
-      // Filter out stories that do not have storyFi field
-      const filteredData = data.translations.filter(story => story.storyFi && story.storyFi.length > 0)
+      // Filter out stories that do not have storyFi as a valid array
+      const filteredData = data.translations.filter(story => Array.isArray(story.storyFi) && story.storyFi.length > 0)
       setStories([...filteredData]);
       let key = JSON.parse(data.lastEvaluatedKey);
       key = key.id;
@@ -27,21 +27,18 @@ export const StoryList = () => {
     fetchStories();
   }, [storyType]);
 
-  const handleLoadMore = () => {
-    const fetchStories = async () => {
-      // if storyType is all then we don't need to pass it to the api
-      const storyTypeParam = storyType === "all" ? null : storyType;
-      const data = await getStories(lastEvaluatedKey, storyTypeParam);
-      // Filter out stories that do not have storyFi field
-      const filteredData = data.translations.filter(story => story.storyFi && story.storyFi.length > 0)
-      setStories([...stories, ...filteredData]);
-      let key = data.lastEvaluatedKey
-        ? JSON.parse(data.lastEvaluatedKey)
-        : null;
-      key = key && key.id;
-      setLastEvaluetedKey(key);
-    };
-    fetchStories();
+  const handleLoadMore = async () => {
+    // if storyType is all then we don't need to pass it to the api
+    const storyTypeParam = storyType === "all" ? null : storyType;
+    const data = await getStories(lastEvaluatedKey, storyTypeParam);
+    // Filter out stories that do not have storyFi as a valid array
+    const filteredData = data.translations.filter(story => Array.isArray(story.storyFi) && story.storyFi.length > 0)
+    setStories([...stories, ...filteredData]);
+    let key = data.lastEvaluatedKey
+      ? JSON.parse(data.lastEvaluatedKey)
+      : null;
+    key = key && key.id;
+    setLastEvaluetedKey(key);
   };
 
   return (
